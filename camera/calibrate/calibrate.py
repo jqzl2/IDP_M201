@@ -13,6 +13,8 @@ _img_shape = None
 objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 images = glob.glob('C:/Users/LUJQZ/OneDrive - University of Cambridge/Engineering Tripos/Part IB/2CW/IDP_M201/camera/calibrate/*.jpg')
+#images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
+
 
 for fname in images:
     img = cv2.imread(fname)
