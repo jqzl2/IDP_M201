@@ -7,7 +7,6 @@ K=np.array([[617.0246864588934, 0.0, 498.84953870958276], [0.0, 620.539046664964
 D=np.array([[0.15842294486041952], [-0.8060115044560319], [1.463190158015197], [-0.9325973032567597]])
 
 def undistort(img):
-    # img = cv2.imread(img_path)
     h,w = img.shape[:2]
     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
@@ -29,8 +28,6 @@ while cam.isOpened():
 	if ret == True:
 		# Display the resulting frame
 		undistort(frame)
-		# cv2.imshow('Frame', frame)
-		cv2.waitKey(1)
 
 		# Press Q on keyboard to exit
 		if keyboard.is_pressed('q'):
