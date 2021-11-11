@@ -29,7 +29,7 @@ def undistort(img):
 
 	return undistorted_img
 
-def findContors(img):
+def findContours(img):
 	img = undistort(img)
 
 	imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -75,7 +75,7 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 
-		ret = findContors(frame)
+		ret = findContours(frame)
 		cv2.waitKey(1)
 
 		#Display the resulting frame
