@@ -30,34 +30,35 @@ def undistort(img):
 	return undistorted_img
 
 def findContors(img):
-    img = undistort(img)
+	img = undistort(img)
 
-    img[ : , : , 0] = 0
-    img[ : , : , 2] = 0
+	imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-    imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+	imgBlur = cv2.GaussianBlur(imgB , (3,3) , 0)
 
-    imgBlur = cv2.GaussianBlur(imgB , (3,3) , 0)
+	imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
 
-    imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
+	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+	
+	polyContours = []
 
-    contours, _ = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+	for i in range(len(contours)):
+		if heirachy[0][i][3] < 0:
+			polyContours.append(contours[i])
 
-    print(len(contours))
-    for i in range(260,len(contours)):
-        cv2.imshow("contour",cv2.drawContours(img, contours, i, (0,255,75) , 2))
-        print(i)
-        cv2.waitKey(1)
-        
-    cv2.imshow("contour",cv2.drawContours(img, contours, -1 , (0,255,75), 2))
+	for i in range(len(contours)):
+		M = cv2.moments(contours[i])
+		#img = cv2.circle(img, (int(M['m10']/M['m00']),int(M['m01']/M['m00'])), radius=0, color=(0, 0, 255), thickness=-1)
 
-    return True
+	cv2.imshow("contour",cv2.drawContours(img, polyContours, -1 , (0,255,75), 2))
+	
+	
 
-images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
+#images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
 
-for frame in images:
-    findContors(cv2.imread(frame))
-    cv2.waitKey(0)
+#for frame in images:
+#    findContors(cv2.imread(frame))
+#    cv2.waitKey(0)
 
 
 # Create VideoCapture object and read from camera address
@@ -77,10 +78,10 @@ while cam.isOpened():
 		ret = findContors(frame)
 		cv2.waitKey(1)
 
-        #Display the resulting frame
+		#Display the resulting frame
 		#cv2.imshow("undistorted",undistort(frame))
 		# Press Q on keyboard to exit
-        
+		
 		if keyboard.is_pressed('q'):
 			break
 		
