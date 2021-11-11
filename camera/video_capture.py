@@ -26,13 +26,8 @@ def undistort(img):
 	map1, map2 = cv2.fisheye.initUndistortRectifyMap(scaled_K, D, np.eye(3), new_K, dim3, cv2.CV_16SC2)
 	undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
+	return undistorted_img
 
-	#map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-	#undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-
-	return img
-	cv2.imshow("undistorted", undistorted_img)
-	cv2.waitKey(1)
     
 # Create VideoCapture object and read from camera address
 cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
@@ -41,15 +36,13 @@ cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 if (cam.isOpened() == False):
 	print("Error opening video stream")
 
-count = 0
 # Read until video is completed
 while cam.isOpened():
 	# Capture frame-by-frame
 	ret, frame = cam.read()
 	if ret == True:
 		# Display the resulting frame
-		cv2.imshow("undistorted",undistort(frame))
-		cv2.waitKey(1)
+		undistort(frame)
 
 		# Press Q on keyboard to exit
 		if keyboard.is_pressed('q'):
@@ -57,8 +50,7 @@ while cam.isOpened():
 		
 		# Press S to save frame
 		if keyboard.is_pressed('s'):
-			count += 1
-			cv2.imwrite("frame%d.jpg" % count, frame)
+			cv2.imwrite("frame.jpg", frame)
 	
 	# Break the loop
 	else:

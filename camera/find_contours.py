@@ -138,7 +138,7 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 
-		ret = findContors(frame)
+		ret = findContours(frame)
 		cv2.waitKey(1)
 
 		#Display the resulting frame
