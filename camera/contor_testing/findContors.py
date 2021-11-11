@@ -29,8 +29,59 @@ def undistort(img):
 
 	return undistorted_img
 
-def findContors(img):
+def isolateCenter(img):
 	img = undistort(img)
+
+	box = np.array([
+            [[201,735]],
+            [[178,76]],
+            [[813,36]],
+            [[878,705]]
+        ])
+
+	src_pts = box.astype("float32")
+
+	width = (int)(((201-878)**2 + (735-705)**2)**0.5)
+	height = (int)(((201-178)**2 + (735-76)**2)**0.5)
+
+	dst_pts = np.array([[0, height-1],
+                        [0, 0],
+                        [width-1, 0],
+                        [width-1, height-1]], dtype="float32")
+
+	M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+	warped = cv2.warpPerspective(img, M, (width, height))
+
+	return(warped)
+
+
+def isInAllQuater(contour):
+	#print(contour)
+	Quarter = 0
+	Truth = [False, False, False, False]
+
+	for i in range(4):
+		if contour[i][0][0] > 508:
+			Quarter = 2
+		else:
+			Quarter = 0
+		
+		if contour[i][0][1] > 380:
+			Quarter += 1
+		Truth[Quarter] = True
+
+	print(Truth)
+
+	return True
+
+	if Truth.__contains__(False):
+		return False
+
+	return True
+
+def findContors(img):
+	#img = undistort(img)
+	img = isolateCenter(img)
 
 	imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
@@ -42,23 +93,35 @@ def findContors(img):
 	
 	polyContours = []
 
+	max = 0
+	cont = []
+
 	for i in range(len(contours)):
+		if heirachy[0][i][2] > max:
+			max = heirachy[0][i][2]
+			
 		if heirachy[0][i][3] < 0:
 			polyContours.append(contours[i])
 
 	for i in range(len(contours)):
-		M = cv2.moments(contours[i])
-		#img = cv2.circle(img, (int(M['m10']/M['m00']),int(M['m01']/M['m00'])), radius=0, color=(0, 0, 255), thickness=-1)
+	 	M = cv2.moments(contours[i])
+	 	if M['m00'] != 0.0:
+	 		img = cv2.circle(img, (int(M['m10']/M['m00']),int(M['m01']/M['m00'])), radius=5, color=(0, 0, 255), thickness=-1)
 
-	cv2.imshow("contour",cv2.drawContours(img, polyContours, -1 , (0,255,75), 2))
+	# for i in range(len(contours)):
+	# 	M = cv2.moments(contours[i])
+	# 	if M['m00'] > max and len(cv2.approxPolyDP(contours[i], 20 , True)) == 4:
+	# 		max = M['m00']
+	# 		cont = contours[i]
+
+	cv2.imshow("contour",cv2.drawContours(img, contours, -1 , (0,255,75), 2))
 	
-	
 
-#images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
+images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
 
-#for frame in images:
-#    findContors(cv2.imread(frame))
-#    cv2.waitKey(0)
+for frame in images:
+    findContors(cv2.imread(frame))
+    cv2.waitKey(0)
 
 
 # Create VideoCapture object and read from camera address
