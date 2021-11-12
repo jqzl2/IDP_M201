@@ -42,15 +42,19 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 		# Display the resulting frame
-		undistort(frame)
+		#frame = undistort(frame)
+
+		cv2.imshow("test",frame)
 
 		# Press Q on keyboard to exit
 		if keyboard.is_pressed('q'):
 			break
 		
 		# Press S to save frame
-		if keyboard.is_pressed('s'):
-			cv2.imwrite("frame.jpg", frame)
+		#if keyboard.is_pressed('s'):
+		cv2.waitKey(0)
+		cv2.imwrite("frame.jpg", frame)
+		
 	
 	# Break the loop
 	else:
