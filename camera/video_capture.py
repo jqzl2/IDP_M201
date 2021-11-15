@@ -36,24 +36,27 @@ cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 if (cam.isOpened() == False):
 	print("Error opening video stream")
 
+count = 0
 # Read until video is completed
 while cam.isOpened():
 	# Capture frame-by-frame
 	ret, frame = cam.read()
 	if ret == True:
 		# Display the resulting frame
-		#frame = undistort(frame)
+		frame = undistort(frame)
+		
 
 		cv2.imshow("test",frame)
+		cv2.waitKey(1)
 
 		# Press Q on keyboard to exit
 		if keyboard.is_pressed('q'):
 			break
 		
 		# Press S to save frame
-		#if keyboard.is_pressed('s'):
-		cv2.waitKey(0)
-		cv2.imwrite("frame.jpg", frame)
+		if keyboard.is_pressed('s'):
+			count += 1
+			cv2.imwrite("frame%d.jpg"%count, frame)
 		
 	
 	# Break the loop
