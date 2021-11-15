@@ -31,8 +31,9 @@ def undistort(img):
 
 	return undistorted_img
 
-def isolateCenter(img):
-	img = undistort(img)
+def isolateCenter(img, distorted = True):
+	if distorted == True:
+         img = undistort(img)
 
 	box = np.array([
             [[201,735]],
@@ -56,95 +57,60 @@ def isolateCenter(img):
 
 	return(warped)
 
+def ContSortFunct(contour):
+    area = cv2.contourArea(contour)
+    if contour[0][0][0] > contour[0][0][1]:
+	    return Infinity
 
-# def isInAllQuater(contour):
-# 	#print(contour)
-# 	Quarter = 0
-# 	Truth = [False, False, False, False]
+    return area
 
-# 	for i in range(4):
-# 		if contour[i][0][0] > 508:
-# 			Quarter = 2
-# 		else:
-# 			Quarter = 0
-		
-# 		if contour[i][0][1] > 380:
-# 			Quarter += 1
-# 		Truth[Quarter] = True
+    arcLength = cv2.arcLength(contour, True)
+    if arcLength > 0.1 and area > 0.1:
+        circularity = 4 * np.math.pi * area / (arcLength * arcLength)
+    else:
+        circularity = 0
 
-# 	print(Truth)
+    return circularity
 
-# 	return True
 
-def findContors(img):
-	#img = undistort(img)
-	img = isolateCenter(img)
+def findDummies(img):
+    imgB = img.copy()
 
-	imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    contrast = 64 * 4
+    f = 131*(contrast + 127)/(127*(131-contrast))
 
-	imgBlur = cv2.GaussianBlur(imgB , (3,3) , 0)
+    imgB[:,:,0] = 0
+    imgB[:,:,2] = 0
 
-	imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
+    imgB = cv2.addWeighted(imgB, f, imgB, 0, 127 * (1-f))
 
-	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-	
-	polyContours = []
 
-	blueGoal = [Infinity,0]
-	redGoal = [Infinity,0]
-	whiteGoal = [Infinity,0]
-
-	max = 0
-	cont = []
-
-	for i in range(len(contours)):
-		if heirachy[0][i][2] > max:
-			max = heirachy[0][i][2]
-			
-		if heirachy[0][i][2] < 0:
-			polyContours.append(contours[i])
-
-	for i in range(len(polyContours)):
-	 	M = cv2.moments(polyContours[i])
-	 	if M['m00'] != 0.0:
-			 x = M['m10'] / M['m00']
-			 y = M['m01'] / M['m00']
-
-			 if (430 - x)**2 + (120 - y)**2 < blueGoal[0]:
-				 blueGoal[0] = (430 - x)**2 + (120 - y)**2
-				 blueGoal[1] = polyContours[i]
-				
-			 if (550 - x)**2 + (235 - y)**2 < redGoal[0]:
-				 redGoal[0] = (550 - x)**2 + (235 - y)**2
-				 redGoal[1] = polyContours[i]
-			
-			 if (615 - x)**2 + (53 - y)**2 < whiteGoal[0]:
-				 whiteGoal[0] = (615 - x)**2 + (53 - y)**2
-				 whiteGoal[1] = polyContours[i]
-
-	 		#img = cv2.circle(img, (int(M['m10']/M['m00']),int(M['m01']/M['m00'])), radius=5, color=(0, 0, 255), thickness=-1)
-
-	cv2.circle(img, (430,120), 5, (255,0,0), -1)
-	cv2.circle(img, (550,235), 5, (0,0,255), -1)
-	cv2.circle(img, (615,53), 5, (255,255,255), -1)
-
-	cv2.drawContours(img, blueGoal[1], -1, (255,0,0), 2)
-	cv2.drawContours(img, redGoal[1], -1, (0,0,255), 2)
-	cv2.drawContours(img, whiteGoal[1], -1, (255,255,255), 2)
-
-	cv2.imshow("trest",img)
+    imgB = cv2.cvtColor(imgB,cv2.COLOR_BGR2GRAY)
 
 
 
+    imgBlur = imgB
+    imgBlur = cv2.GaussianBlur(imgB , (5,5) , 0)
 
-	#cv2.imshow("contour",cv2.drawContours(img, polyContours, -1 , (0,255,75), 2))
+
+    imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
+
+    contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+    contours = list(contours)
+    contours.sort(key = lambda x: ContSortFunct(x))
+
+    imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
+
+    cv2.drawContours(img , contours[:4] , -1 , (0,255,75) , 2)
+    cv2.imshow("trest",img)
 	
 
-images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
+# images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/contour_testing/*.jpg')
 
-for frame in images:
-    findContors(cv2.imread(frame))
-    cv2.waitKey(0)
+# for frame in images:
+#     findDummies(isolateCenter(cv2.imread(frame),False))
+#     cv2.waitKey(0)
 
 
 # Create VideoCapture object and read from camera address
@@ -161,7 +127,7 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 
-		ret = findContors(frame)
+		ret = findDummies(isolateCenter(frame))
 		cv2.waitKey(1)
 
 		#Display the resulting frame
