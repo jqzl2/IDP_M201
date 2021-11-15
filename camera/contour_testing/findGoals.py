@@ -56,53 +56,6 @@ def isolateCenter(img):
 
 	return(warped)
 
-
-# def isInAllQuater(contour):
-# 	#print(contour)
-# 	Quarter = 0
-# 	Truth = [False, False, False, False]
-
-# 	for i in range(4):
-# 		if contour[i][0][0] > 508:
-# 			Quarter = 2
-# 		else:
-# 			Quarter = 0
-		
-# 		if contour[i][0][1] > 380:
-# 			Quarter += 1
-# 		Truth[Quarter] = True
-
-# 	print(Truth)
-
-# 	return True
-
-def testingFunct(img):
-	img = isolateCenter(img)
-	imgEdge = img.copy()
-	imgEdge[:,:,0] = 0
-	imgEdge[:,:,2] = 0
-	imgEdge = cv2.cvtColor(imgEdge,cv2.COLOR_BGR2GRAY)
-	imgEdge = cv2.GaussianBlur(img,(3,3),0)
-	imgEdge = cv2.Canny(image=imgEdge,threshold1=0, threshold2=255)
-
-	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
-
-	img = cv2.drawContours(img, contours,-1, (0,255,175),2)
-
-	for i in range(len(contours)):
-		if contours[i][0][0][1] > contours[i][0][0][0]:
-			(x,y) , r = cv2.minEnclosingCircle(contours[i])
-			center = (int(x),int(y))
-
-			perim = cv2.arcLength(contours[i],True)
-
-			radius = int((perim)/r)
-
-			cv2.circle(img,center,radius,(255,0,0),2)
-		#cv2.circle(img,center,perim,(0,0,255),1)
-
-	cv2.imshow("test",img)
-
 def findContors(img):
 	#img = undistort(img)
 	img = isolateCenter(img)
@@ -149,23 +102,24 @@ def findContors(img):
 				 whiteGoal[0] = (615 - x)**2 + (53 - y)**2
 				 whiteGoal[1] = polyContours[i]
 
+	 		#img = cv2.circle(img, (int(M['m10']/M['m00']),int(M['m01']/M['m00'])), radius=5, color=(0, 0, 255), thickness=-1)
 
 	cv2.circle(img, (430,120), 5, (255,0,0), -1)
 	cv2.circle(img, (550,235), 5, (0,0,255), -1)
 	cv2.circle(img, (615,53), 5, (255,255,255), -1)
 
-	cv2.drawContours(img, blueGoal[1], -1, (0,0,0), 2)
-	cv2.drawContours(img, redGoal[1], -1, (0,0,0), 2)
-	cv2.drawContours(img, whiteGoal[1], -1, (0,0,0), 2)
+	cv2.drawContours(img, blueGoal[1], -1, (255,0,0), 2)
+	cv2.drawContours(img, redGoal[1], -1, (0,0,255), 2)
+	cv2.drawContours(img, whiteGoal[1], -1, (255,255,255), 2)
 
 	cv2.imshow("trest",img)
-
+	
 
 # images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
 
 # for frame in images:
-#     testingFunct(cv2.imread(frame))
-#     cv2.waitKey(0)
+#     findContors(cv2.imread(frame))
+#     cv2.waitKey(0)0
 
 
 # Create VideoCapture object and read from camera address
