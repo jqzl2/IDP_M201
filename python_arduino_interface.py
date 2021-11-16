@@ -5,12 +5,12 @@ arduino = urllib3.PoolManager()
 
 while True:
     if keyboard.is_pressed('1'):
-        r = arduino.request('GET', 'http://192.168.137.235/H')
+        r = arduino.request('GET', 'http://192.168.137.172/H')
         print(r.status)
         print(r.data)
     
     if keyboard.is_pressed('0'):
-        r = arduino.request('GET', 'http://192.168.137.235/L')
+        r = arduino.request('GET', 'http://192.168.137.172/L')
         print(r.status)
         print(r.data)
     
