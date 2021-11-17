@@ -1,4 +1,4 @@
-/*
+ /*
   WiFi Web Server LED Blink
 
  A simple web server that lets you blink an LED via the web.
@@ -22,6 +22,7 @@
  */
 #include <SPI.h>
 #include <WiFiNINA.h>
+#include <ArduinoJson.h>
 
 #include "arduino_secrets.h" 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
