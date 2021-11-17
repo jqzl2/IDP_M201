@@ -11,8 +11,7 @@ while True:
         angle = random.randint(0,360)
         data = {'position': coord, 'orientation': angle}
         encoded_data = json.dumps(data).encode('utf-8')
-        r = arduino.request('POST', 'http://192.168.137.111/post', body = encoded_data, headers = {'Content-Type': 'application/json'}
-        )
+        r = arduino.request('POST', 'http://192.168.137.168/', body = encoded_data, headers = {'Content-Type': 'application/json'})
 
         json.loads(r.data.decode('utf-8'))['json']
 
