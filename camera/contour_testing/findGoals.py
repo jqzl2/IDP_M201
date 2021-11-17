@@ -115,11 +115,11 @@ def findContors(img):
 	cv2.imshow("trest",img)
 	
 
-# images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/calibrate/*.jpg')
+images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/contour_testing/*.jpg')
 
-# for frame in images:
-#     findContors(cv2.imread(frame))
-#     cv2.waitKey(0)0
+for frame in images:
+    findContors(cv2.imread(frame))
+    cv2.waitKey(0)
 
 
 # Create VideoCapture object and read from camera address

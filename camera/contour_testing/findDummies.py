@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import keyboard
 import glob
+import math
 
 from numpy.core.numeric import Infinity
 
@@ -33,14 +34,14 @@ def undistort(img):
 
 def isolateCenter(img, distorted = True):
 	if distorted == True:
-         img = undistort(img)
+		 img = undistort(img)
 
 	box = np.array([
-            [[201,735]],
-            [[178,76]],
-            [[813,36]],
-            [[878,705]]
-        ])
+			[[201,735]],
+			[[178,76]],
+			[[813,36]],
+			[[878,705]]
+		])
 
 	src_pts = box.astype("float32")
 
@@ -48,9 +49,9 @@ def isolateCenter(img, distorted = True):
 	height = (int)(((201-178)**2 + (735-76)**2)**0.5)
 
 	dst_pts = np.array([[0, height-1],
-                        [0, 0],
-                        [width-1, 0],
-                        [width-1, height-1]], dtype="float32")
+						[0, 0],
+						[width-1, 0],
+						[width-1, height-1]], dtype="float32")
 
 	M = cv2.getPerspectiveTransform(src_pts, dst_pts)
 	warped = cv2.warpPerspective(img, M, (width, height))
@@ -58,59 +59,52 @@ def isolateCenter(img, distorted = True):
 	return(warped)
 
 def ContSortFunct(contour):
-    area = cv2.contourArea(contour)
-    if contour[0][0][0] > contour[0][0][1]:
-	    return Infinity
+	area = cv2.contourArea(contour)
 
-    return area
-
-    arcLength = cv2.arcLength(contour, True)
-    if arcLength > 0.1 and area > 0.1:
-        circularity = 4 * np.math.pi * area / (arcLength * arcLength)
-    else:
-        circularity = 0
-
-    return circularity
+	perim = cv2.arcLength(contour,True)
+	if contour[0][0][0] > contour[0][0][1] or area == 0 or perim == 0:
+		return Infinity
+	return area
 
 
 def findDummies(img):
-    imgB = img.copy()
+	imgB = img.copy()
+	contrast = 64 * 4
+	f = 131*(contrast + 127)/(127*(131-contrast))
 
-    contrast = 64 * 4
-    f = 131*(contrast + 127)/(127*(131-contrast))
+	imgB[:,:,0] = 0
+	imgB[:,:,2] = 0
 
-    imgB[:,:,0] = 0
-    imgB[:,:,2] = 0
-
-    imgB = cv2.addWeighted(imgB, f, imgB, 0, 127 * (1-f))
-
-
-    imgB = cv2.cvtColor(imgB,cv2.COLOR_BGR2GRAY)
+	imgB = cv2.addWeighted(imgB, f, imgB, 0, 127 * (1-f))
 
 
-
-    imgBlur = imgB
-    imgBlur = cv2.GaussianBlur(imgB , (5,5) , 0)
+	imgB = cv2.cvtColor(imgB,cv2.COLOR_BGR2GRAY)
 
 
-    imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
 
-    contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+	imgBlur = imgB
+	imgBlur = cv2.GaussianBlur(imgB , (7,7) , 0)
 
-    contours = list(contours)
-    contours.sort(key = lambda x: ContSortFunct(x))
 
-    imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
+	imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
 
-    cv2.drawContours(img , contours[:4] , -1 , (0,255,75) , 2)
-    cv2.imshow("trest",img)
+	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+	contours = list(contours)
+	contours.sort(key = lambda x: ContSortFunct(x))
+
+	imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
+
+	cv2.drawContours(imgB , contours[:5] , -1 , (0,255,75) , 2)
+
+	cv2.imshow("trest",imgB)
 	
 
 # images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/contour_testing/*.jpg')
 
 # for frame in images:
-#     findDummies(isolateCenter(cv2.imread(frame),False))
-#     cv2.waitKey(0)
+# 	 findDummies(isolateCenter(cv2.imread(frame),False))
+# 	 cv2.waitKey(0)
 
 
 # Create VideoCapture object and read from camera address
