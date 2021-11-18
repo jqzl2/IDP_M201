@@ -1,6 +1,5 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
-#include <ArduinoJson.h>
 
 #include "arduino_secrets.h" 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
@@ -10,6 +9,27 @@ int keyIndex = 0;                 // your network key index number (needed only 
 
 int status = WL_IDLE_STATUS;
 WiFiServer server(80);
+String readString;
+
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+
+  // print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+  // print where to go in a browser:
+  Serial.print("To see this page in action, open a browser to http://");
+  Serial.println(ip);
+}
 
 void setup() {
   Serial.begin(9600);      // initialize serial communication
@@ -46,8 +66,8 @@ void loop() {
   WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
-    Serial.println("new client");           // print a message out the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
+    String lol = "";
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
@@ -63,6 +83,10 @@ void loop() {
             client.println("Content-type:text/html");
             client.println();
 
+            // the content of the HTTP response follows the header:
+            client.print("Click <a href=\"/H\">here</a> turn the LED on pin 9 on<br>");
+            client.print("Click <a href=\"/L\">here</a> turn the LED on pin 9 off<br>");
+
             // The HTTP response ends with another blank line:
             client.println();
             // break out of the while loop:
@@ -72,35 +96,19 @@ void loop() {
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
-        }
-
-        if (currentLine.endsWith("POST")) {
-          
+          bool digit = isDigit(c);
+          if (lol.length() < 3 && digit == true){
+            lol += c;
+          }
         }
       }
     }
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
+    Serial.print(lol);
   }
 }
 
-void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
 
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
-  // print where to go in a browser:
-  Serial.print("To see this page in action, open a browser to http://");
-  Serial.println(ip);
-}
+        
