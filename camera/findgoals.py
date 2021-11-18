@@ -30,7 +30,7 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 
-		ret = findContours(frame)
+		frame = findContours(frame)
 		cv2.waitKey(1)
 
 		#Display the resulting frame

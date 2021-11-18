@@ -82,7 +82,7 @@ while cam.isOpened():
 	ret, frame = cam.read()
 	if ret == True:
 
-		ret = findDummies(isolateCenter(frame))
+		frame = findDummies(isolateCenter(frame))
 		cv2.waitKey(1)
 
 		#Display the resulting frame
