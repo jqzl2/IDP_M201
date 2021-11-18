@@ -97,7 +97,7 @@ void loop() {
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
           bool digit = isDigit(c);
-          if (lol.length() < 3 && digit == true){
+          if (currentLine.length() < 10 && digit == true){
             lol += c;
           }
         }
