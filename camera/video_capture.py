@@ -30,7 +30,7 @@ def undistort(img):
 
 	return undistorted_img
 
-def start_video():
+def start_video(f):
 	# Create VideoCapture object and read from camera address
 	cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 
@@ -45,9 +45,7 @@ def start_video():
 		ret, frame = cam.read()
 		if ret == True:
 			# Display the resulting frame
-			frame = undistort(frame)
-			
-
+			frame = f(frame)
 			cv2.imshow("test",frame)
 			cv2.waitKey(1)
 
@@ -95,7 +93,7 @@ def isolateCenter(img):
 	M = cv2.getPerspectiveTransform(src_pts, dst_pts)
 	warped = cv2.warpPerspective(img, M, (width, height))
 
-	return(warped)
+	return warped
 
 def findContours(img):
 	#img = undistort(img)
@@ -152,7 +150,7 @@ def findContours(img):
 	cv2.drawContours(img, redGoal[1], -1, (0,0,0), 2)
 	cv2.drawContours(img, whiteGoal[1], -1, (0,0,0), 2)
 
-	cv2.imshow("trest",img)
+	return img
 
 'References: https://www.geeksforgeeks.org/camera-calibration-with-python-opencv/' 
 'https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0'
