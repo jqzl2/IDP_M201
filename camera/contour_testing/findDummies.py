@@ -62,7 +62,7 @@ def ContSortFunct(contour):
 	area = cv2.contourArea(contour)
 
 	perim = cv2.arcLength(contour,True)
-	if contour[0][0][0] > contour[0][0][1] or area == 0 or perim == 0:
+	if contour[0][0][0] > contour[0][0][1] or (contour[0][0][0] < 75 and contour[0][0][1] > 575):
 		return Infinity
 	return area
 
@@ -95,7 +95,8 @@ def findDummies(img):
 
 	imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
 
-	cv2.drawContours(imgB , contours[:5] , -1 , (0,255,75) , 2)
+	cv2.drawContours(imgB , contours[:3] , -1 , (0,255,75) , 2)
+	cv2.circle(imgB , [75,575] , 10, [0,255,75], -1)
 
 	cv2.imshow("trest",imgB)
 	

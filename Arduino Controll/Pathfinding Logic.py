@@ -70,6 +70,9 @@ path = findPermuataion(dummies , goals)
 plt.plot([15 , 225],[225,15])
 
 plt.plot(path[0] , path[1])
+plt.xlim(0,240)
+plt.ylim(0,240)
+plt.gca().set_aspect("equal", "box")
 plt.show()
 
 
