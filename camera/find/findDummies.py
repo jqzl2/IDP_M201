@@ -96,9 +96,18 @@ def findDummies(img):
 	imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
 
 	cv2.drawContours(imgB , contours[:3] , -1 , (0,255,75) , 2)
-	cv2.circle(imgB , (75,575) , 10, (0,255,75), -1)
+	
+	for i in range(4):
+	 	M = cv2.moments(contours[i])
+	 	if M['m00'] != 0.0:
+			 x_centre = int(M['m10']/M['m00'])
+			 y_centre = int(M['m01']/M['m00'])
+			 centre = (x_centre, y_centre)
+			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
 
-	cv2.imshow("trest",imgB)
+	cv2.imshow("trest",img)
+	cv2.waitKey(0)
+	print(centre)
 	
 
 # images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/contour_testing/*.jpg')
