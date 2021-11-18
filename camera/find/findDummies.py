@@ -4,38 +4,12 @@ import keyboard
 import glob
 import math
 
-from camera.video_capture import undistort
+from camera.video_capture import isolateCenter
 from numpy.core.numeric import Infinity
 
 DIM=(1016, 760)
 K=np.array([[617.0246864588934, 0.0, 498.84953870958276], [0.0, 620.5390466649645, 395.6528980159782], [0.0, 0.0, 1.0]])
 D=np.array([[0.15842294486041952], [-0.8060115044560319], [1.463190158015197], [-0.9325973032567597]])
-
-def isolateCenter(img, distorted = True):
-	if distorted == True:
-		 img = undistort(img)
-
-	box = np.array([
-			[[201,735]],
-			[[178,76]],
-			[[813,36]],
-			[[878,705]]
-		])
-
-	src_pts = box.astype("float32")
-
-	width = (int)(((201-878)**2 + (735-705)**2)**0.5)
-	height = (int)(((201-178)**2 + (735-76)**2)**0.5)
-
-	dst_pts = np.array([[0, height-1],
-						[0, 0],
-						[width-1, 0],
-						[width-1, height-1]], dtype="float32")
-
-	M = cv2.getPerspectiveTransform(src_pts, dst_pts)
-	warped = cv2.warpPerspective(img, M, (width, height))
-
-	return(warped)
 
 def ContSortFunct(contour):
 	area = cv2.contourArea(contour)

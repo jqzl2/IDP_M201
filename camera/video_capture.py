@@ -28,47 +28,72 @@ def undistort(img):
 
 	return undistorted_img
 
-    
-# Create VideoCapture object and read from camera address
-cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
+def start_video():
+	# Create VideoCapture object and read from camera address
+	cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 
-# Check if camera is opened successfully
-if (cam.isOpened() == False):
-	print("Error opening video stream")
+	# Check if camera is opened successfully
+	if (cam.isOpened() == False):
+		print("Error opening video stream")
 
-count = 0
-# Read until video is completed
-while cam.isOpened():
-	# Capture frame-by-frame
-	ret, frame = cam.read()
-	if ret == True:
-		# Display the resulting frame
-		frame = undistort(frame)
+	count = 0
+	# Read until video is completed
+	while cam.isOpened():
+		# Capture frame-by-frame
+		ret, frame = cam.read()
+		if ret == True:
+			# Display the resulting frame
+			frame = undistort(frame)
+			
+
+			cv2.imshow("test",frame)
+			cv2.waitKey(1)
+
+			# Press Q on keyboard to exit
+			if keyboard.is_pressed('q'):
+				break
+			
+			# Press S to save frame
+			if keyboard.is_pressed('s'):
+				count += 1
+				cv2.imwrite("frame%d.jpg"%count, frame)
+			
 		
-
-		cv2.imshow("test",frame)
-		cv2.waitKey(1)
-
-		# Press Q on keyboard to exit
-		if keyboard.is_pressed('q'):
+		# Break the loop
+		else:
+			print("Failed to read camera") 
 			break
-		
-		# Press S to save frame
-		if keyboard.is_pressed('s'):
-			count += 1
-			cv2.imwrite("frame%d.jpg"%count, frame)
-		
-	
-	# Break the loop
-	else:
-		print("Failed to read camera") 
-		break
 
-# When everything done, release the video capture object
-cam.release()
+	# When everything done, release the video capture object
+	cam.release()
 
-# Close all the frames
-cv2.destroyAllWindows()
+	# Close all the frames
+	cv2.destroyAllWindows()
+
+def isolateCenter(img):
+	img = undistort(img)
+
+	box = np.array([
+            [[201,735]],
+            [[178,76]],
+            [[813,36]],
+            [[878,705]]
+        ])
+
+	src_pts = box.astype("float32")
+
+	width = (int)(((201-878)**2 + (735-705)**2)**0.5)
+	height = (int)(((201-178)**2 + (735-76)**2)**0.5)
+
+	dst_pts = np.array([[0, height-1],
+                        [0, 0],
+                        [width-1, 0],
+                        [width-1, height-1]], dtype="float32")
+
+	M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+	warped = cv2.warpPerspective(img, M, (width, height))
+
+	return(warped)
 
 'References: https://www.geeksforgeeks.org/camera-calibration-with-python-opencv/' 
 'https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0'
