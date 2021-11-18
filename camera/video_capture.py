@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 import keyboard
 
+from numpy.core.numeric import Infinity
+
 DIM=(1016, 760)
 K=np.array([[617.0246864588934, 0.0, 498.84953870958276], [0.0, 620.5390466649645, 395.6528980159782], [0.0, 0.0, 1.0]])
 D=np.array([[0.15842294486041952], [-0.8060115044560319], [1.463190158015197], [-0.9325973032567597]])
@@ -94,6 +96,63 @@ def isolateCenter(img):
 	warped = cv2.warpPerspective(img, M, (width, height))
 
 	return(warped)
+
+def findContours(img):
+	#img = undistort(img)
+	img = isolateCenter(img)
+
+	imgB = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+
+	imgBlur = cv2.GaussianBlur(imgB , (3,3) , 0)
+
+	imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
+
+	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+	
+	polyContours = []
+
+	blueGoal = [Infinity,0]
+	redGoal = [Infinity,0]
+	whiteGoal = [Infinity,0]
+
+	max = 0
+	cont = []
+
+	for i in range(len(contours)):
+		if heirachy[0][i][2] > max:
+			max = heirachy[0][i][2]
+			
+		if heirachy[0][i][2] < 0:
+			polyContours.append(contours[i])
+
+	for i in range(len(polyContours)):
+	 	M = cv2.moments(polyContours[i])
+	 	if M['m00'] != 0.0:
+			 x = M['m10'] / M['m00']
+			 y = M['m01'] / M['m00']
+
+			 if (430 - x)**2 + (120 - y)**2 < blueGoal[0]:
+				 blueGoal[0] = (430 - x)**2 + (120 - y)**2
+				 blueGoal[1] = polyContours[i]
+				
+			 if (550 - x)**2 + (235 - y)**2 < redGoal[0]:
+				 redGoal[0] = (550 - x)**2 + (235 - y)**2
+				 redGoal[1] = polyContours[i]
+			
+			 if (615 - x)**2 + (53 - y)**2 < whiteGoal[0]:
+				 whiteGoal[0] = (615 - x)**2 + (53 - y)**2
+				 whiteGoal[1] = polyContours[i]
+
+
+	cv2.circle(img, (430,120), 5, (255,0,0), -1)
+	cv2.circle(img, (550,235), 5, (0,0,255), -1)
+	cv2.circle(img, (615,53), 5, (255,255,255), -1)
+
+	cv2.drawContours(img, blueGoal[1], -1, (0,0,0), 2)
+	cv2.drawContours(img, redGoal[1], -1, (0,0,0), 2)
+	cv2.drawContours(img, whiteGoal[1], -1, (0,0,0), 2)
+
+	cv2.imshow("trest",img)
 
 'References: https://www.geeksforgeeks.org/camera-calibration-with-python-opencv/' 
 'https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0'

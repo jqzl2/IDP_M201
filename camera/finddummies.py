@@ -1,10 +1,8 @@
 import cv2
 import numpy as np
 import keyboard
-import glob
-import math
 
-from camera.video_capture import isolateCenter
+from video_capture import isolateCenter
 from numpy.core.numeric import Infinity
 
 DIM=(1016, 760)
@@ -59,8 +57,8 @@ def findDummies(img):
 			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
 
 	cv2.imshow("trest",img)
-	cv2.waitKey(0)
-	print(centre)
+	cv2.waitKey(1)
+	# print(centre)
 	
 
 # images = glob.glob('D:/George/Documents/GitHub/IDP_M201/camera/contour_testing/*.jpg')
