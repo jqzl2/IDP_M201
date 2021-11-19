@@ -19,19 +19,19 @@ def goToPoint(robot , goal, path):
 
     return path
 
-def findPath(robot , dummie, path):
-    if robot[2] != dummie[0][2]:
+def findPath(robot , dummy, path):
+    if robot[2] != dummy[0][2]:
         if robot[2] == 0:
             goal = [230,10,1]
         else:
             goal = [10,230,0]
-        return findPath(robot , dummie, goToPoint(robot, goal, path))
+        return findPath(robot , dummy, goToPoint(robot, goal, path))
 
     if robot[2] == 1 and robot[0] < robot[1]:
         path = goToPoint(robot, [230,230,1], path)
-        path = goToPoint(robot, [dummie[0][0],230,1], path)
+        path = goToPoint(robot, [dummy[0][0],230,1], path)
 
-    path = goToPoint(robot, dummie[0], path)
+    path = goToPoint(robot, dummy[0], path)
 
     return path
 
