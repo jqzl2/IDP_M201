@@ -35,7 +35,7 @@ def findPath(robot , dummie, path):
 
     return path
 
-def dummieSortFunct(x):
+def dummySortFunct(x):
     if x[0][0] > x[0][1]:
         return x[0][1]
     return x[0][0]
@@ -53,7 +53,7 @@ def animate(i):
         dummies[i][0][-1] = 1
         plt.plot(dummies[i][0][0],dummies[i][0][1], 'ro')
 
-    dummies.sort(key = lambda x: dummieSortFunct(x))
+    dummies.sort(key = lambda x: dummySortFunct(x))
 
 
     for i in range(3):
