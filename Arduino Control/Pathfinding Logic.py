@@ -75,6 +75,6 @@ def animate(i):
 
 ax = plt.gcf()
 
-ani = animation.FuncAnimation(plt.gcf() , animate, interval = 1)
+ani = animation.FuncAnimation(plt.gcf() , animate, interval = 500)
 
 plt.show()
