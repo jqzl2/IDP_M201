@@ -95,8 +95,8 @@ def findDummies(img):
 
 	imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
 
-	cv2.drawContours(imgB , contours[:3] , -1 , (0,255,75) , 2)
-	cv2.circle(imgB , [75,575] , 10, [0,255,75], -1)
+	cv2.drawContours(imgB , contours[:4] , -1 , (0,255,75) , 2)
+	#cv2.circle(imgB , [75,575] , 10, [0,255,75], -1)
 
 	cv2.imshow("trest",imgB)
 	
