@@ -33,7 +33,6 @@ void printWifiStatus() {
 
 void setup() {
   Serial.begin(9600);      // initialize serial communication
-  pinMode(9, OUTPUT);      // set the LED pin mode
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -67,7 +66,7 @@ void loop() {
 
   if (client) {                             // if you get a client,
     String currentLine = "";                // make a String to hold incoming data from the client
-    String lol = "";
+    String data = "";
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
@@ -97,7 +96,7 @@ void loop() {
           currentLine += c;      // add it to the end of the currentLine
           bool digit = isDigit(c);
           if (currentLine.length() < 10 && digit == true){
-            lol += c;
+            data += c;
           }
         }
       }
@@ -105,7 +104,7 @@ void loop() {
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
-    Serial.print(lol);
+    Serial.print(data);
   }
 }
 

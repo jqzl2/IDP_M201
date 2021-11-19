@@ -73,8 +73,8 @@ def animate(i):
     plt.ylim(0,240)
     plt.gca().set_aspect("equal", "box")
 
-ax = plt.gcf()
+# ax = plt.gcf()
 
-ani = animation.FuncAnimation(plt.gcf() , animate, interval = 500)
+# ani = animation.FuncAnimation(plt.gcf() , animate, interval = 500)
 
-plt.show()
+# plt.show()
