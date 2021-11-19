@@ -1,5 +1,6 @@
 import random
 from matplotlib import pyplot as plt
+from matplotlib import animation
 
 def goToPoint(robot , goal, path):
     if robot[1] != goal[1]:
@@ -19,9 +20,6 @@ def goToPoint(robot , goal, path):
     return path
 
 def findPath(robot , dummie, path):
-
-    print(dummie)
-
     if robot[2] != dummie[0][2]:
         if robot[2] == 0:
             goal = [230,10,1]
@@ -29,51 +27,54 @@ def findPath(robot , dummie, path):
             goal = [10,230,0]
         return findPath(robot , dummie, goToPoint(robot, goal, path))
 
+    if robot[2] == 1 and robot[0] < robot[1]:
+        path = goToPoint(robot, [230,230,1], path)
+        path = goToPoint(robot, [dummie[0][0],230,1], path)
+
     path = goToPoint(robot, dummie[0], path)
 
     return path
 
-def findPermuataion(dummies , goals):
+def dummieSortFunct(x):
+    if x[0][0] > x[0][1]:
+        return x[0][1]
+    return x[0][0]
+
+def animate(i):
+    dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
+    goals = [[[90,50,0] , 0] , [[50,90,0] , 1] , [[212,212,1] , 2]]
     robot = [20,20,0]
 
-    path = [[robot[0]],[robot[1]]]
+    plt.gcf().clear()
+
     for i in range(3):
+        dummies[i][0][0] = random.randrange(1,240)
+        dummies[i][0][1] = random.randrange(240 - dummies[i][0][0],240)
+        dummies[i][0][-1] = 1
+        plt.plot(dummies[i][0][0],dummies[i][0][1], 'ro')
+
+    dummies.sort(key = lambda x: dummieSortFunct(x))
+
+
+    for i in range(3):
+        path = [[robot[0]],[robot[1]]]
         path = findPath(robot, dummies[i], path)
         path = findPath(robot, goals[dummies[i][1]], path)
+        plt.plot(path[0] , path[1])
 
-    path = findPath(robot , [[20,20,0] , 0], path)
-
-    return path
-    
-        
+    path = [[robot[0]],[robot[1]]]
+    path = findPath(robot, [[20,20,0] , 0], path)
+    plt.plot(path[0],path[1])
 
 
-dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
-goals = [[[90,50,0] , 0] , [[50,90,0] , 1] , [[212,212,1] , 2]]
-robot = [20,20,0]
+    plt.plot([15 , 225],[225,15])
 
-for i in range(3):
-    dummies[i][0][0] = random.randrange(1,240)
-    dummies[i][0][1] = random.randrange(240 - dummies[i][0][0],240)
-    dummies[i][0][-1] = 1
-    print(dummies[i])
-    plt.plot(dummies[i][0][0],dummies[i][0][1], 'ro')
+    plt.xlim(0,240)
+    plt.ylim(0,240)
+    plt.gca().set_aspect("equal", "box")
 
-path = [[robot[0]],[robot[1]]]
-for i in range(3):
-    path = findPath(robot, dummies[i], path)
-    path = findPath(robot, goals[dummies[i][1]], path)
+ax = plt.gcf()
 
-path = findPermuataion(dummies , goals)
-    
+ani = animation.FuncAnimation(plt.gcf() , animate, interval = 1)
 
-plt.plot([15 , 225],[225,15])
-
-plt.plot(path[0] , path[1])
-plt.xlim(0,240)
-plt.ylim(0,240)
-plt.gca().set_aspect("equal", "box")
 plt.show()
-
-
-print(dummies)
