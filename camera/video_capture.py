@@ -95,7 +95,7 @@ def isolateCenter(img):
 
 	return warped
 
-def findContours(img):
+def findGoals(img):
 	#img = undistort(img)
 	img = isolateCenter(img)
 
@@ -114,7 +114,6 @@ def findContours(img):
 	whiteGoal = [Infinity,0]
 
 	max = 0
-	cont = []
 
 	for i in range(len(contours)):
 		if heirachy[0][i][2] > max:
@@ -149,6 +148,82 @@ def findContours(img):
 	cv2.drawContours(img, blueGoal[1], -1, (0,0,0), 2)
 	cv2.drawContours(img, redGoal[1], -1, (0,0,0), 2)
 	cv2.drawContours(img, whiteGoal[1], -1, (0,0,0), 2)
+
+	return img
+
+def ContSortFunct(contour):
+	area = cv2.contourArea(contour)
+
+	perim = cv2.arcLength(contour,True)
+	if contour[0][0][0] > contour[0][0][1] or (contour[0][0][0] < 75 and contour[0][0][1] > 575):
+		return Infinity
+	return area
+
+def findDummies(img):
+	img = isolateCenter(img)
+	imgB = img.copy()
+	contrast = 64 * 4
+	f = 131*(contrast + 127)/(127*(131-contrast))
+
+	imgB[:,:,0] = 0
+	imgB[:,:,2] = 0
+
+	imgB = cv2.addWeighted(imgB, f, imgB, 0, 127 * (1-f))
+
+
+	imgB = cv2.cvtColor(imgB,cv2.COLOR_BGR2GRAY)
+
+
+
+	imgBlur = imgB
+	imgBlur = cv2.GaussianBlur(imgB , (7,7) , 0)
+
+
+	imgEdge = cv2.Canny(image = imgBlur, threshold1=0, threshold2=255)
+
+	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+	contours = list(contours)
+	contours.sort(key = lambda x: ContSortFunct(x))
+
+	imgB = cv2.cvtColor(imgB , cv2.COLOR_GRAY2BGR)
+
+	cv2.drawContours(imgB , contours[:3] , -1 , (0,255,75) , 2)
+	
+	for i in range(4):
+	 	M = cv2.moments(contours[i])
+	 	if M['m00'] != 0.0:
+			 x_centre = int(M['m10']/M['m00'])
+			 y_centre = int(M['m01']/M['m00'])
+			 centre = (x_centre, y_centre)
+			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
+
+	return img
+
+def findContours(img):
+	img = isolateCenter(img)
+	imgEdge = img.copy()
+	imgEdge[:,:,0] = 0
+	imgEdge[:,:,2] = 0
+	imgEdge = cv2.cvtColor(imgEdge,cv2.COLOR_BGR2GRAY)
+	imgEdge = cv2.GaussianBlur(img,(3,3),0)
+	imgEdge = cv2.Canny(image=imgEdge,threshold1=0, threshold2=255)
+
+	contours, heirachy = cv2.findContours(imgEdge,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
+
+	img = cv2.drawContours(img, contours,-1, (0,255,175),2)
+
+	for i in range(len(contours)):
+		if contours[i][0][0][1] > contours[i][0][0][0]:
+			(x,y) , r = cv2.minEnclosingCircle(contours[i])
+			center = (int(x),int(y))
+
+			perim = cv2.arcLength(contours[i],True)
+
+			radius = int((perim)/r)
+
+			cv2.circle(img,center,radius,(255,0,0),2)
+		#cv2.circle(img,center,perim,(0,0,255),1)
 
 	return img
 
