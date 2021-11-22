@@ -277,7 +277,7 @@ int distanceSide() {
     float P1 = -1 * X3;
     float P2 = -1 * Y3;
 
-    float C1 = X4 - X3;0
+    float C1 = X4 - X3;
     float C2 = Y4 - Y3;
 
     float t = (P1 * C1) + (P2 * C2);
@@ -493,7 +493,7 @@ int collectDummy() {
         digitalWrite(greenPin, LOW);
     }
 
-    delay(5555);[
+    delay(5555);
 
     drive(255,255);
     delay(238);
@@ -509,7 +509,9 @@ int collectDummy() {
 
 void loop() {
 
-  goToDistance(10,10);
+  openDoor();
+
+  goToDistance(5,5);
   turnOnSpot(1);
   
 

@@ -4,6 +4,9 @@ from matplotlib import animation
 
 GoToNum = 0
 TurnNum = 1
+CollectDummyNum = 2
+DepositDummyNum = 3
+ReturnToStartNum = 4
 
 def goToPoint(robot , goal, path):
     if robot[1] != goal[1]:
@@ -22,19 +25,19 @@ def goToPoint(robot , goal, path):
 
     return path
 
-def findPath(robot , dummy, path):
-    if robot[2] != dummy[0][2]:
+def findPath(robot , goal, path):
+    if robot[2] != goal[2]:
         if robot[2] == 0:
-            goal = [230,10,1]
+            transitionPoint = [235,5,1]
         else:
-            goal = [10,230,0]
-        return findPath(robot , dummy, goToPoint(robot, goal, path))
+            transitionPoint = [5,235,0]
+        return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
     if robot[2] == 1 and robot[0] < robot[1]:
-        path = goToPoint(robot, [230,230,1], path)
-        path = goToPoint(robot, [dummy[0][0],230,1], path)
+        path = goToPoint(robot, [235,235,1], path)
+        path = goToPoint(robot, [goal[0],235,1], path)
 
-    path = goToPoint(robot, dummy[0], path)
+    path = goToPoint(robot, goal, path)
 
     return path
 
@@ -47,7 +50,7 @@ def pathToInstructions(path, direction, instructions):
 
     goalDirect = 1
     if len(path[0]) == 1:
-        return instructions
+        return
     #change in x
     if path[0][1] != path[0][0]:
         if path[0][0] < 240 - path[1][0]:
@@ -85,7 +88,32 @@ def pathToInstructions(path, direction, instructions):
 
     instructions.append([GoToNum,front,side])
 
-    return pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions)
+    #print(toPrint)
+
+    pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions)
+
+def generateInstructions(robot , direction, goal):
+    instruct = []
+    dummy = True
+
+    dummyGoals = [[24,24,0],[50,90,0],[90,50,0],[215,215,1]]
+
+    if len(goal) == 1:
+        #this is a dummy goal
+        goal = dummyGoals[goal]
+        dummy = False
+
+    path = findPath(robot , goal, [[],[]])
+    print(path)
+
+
+
+generateInstructions([10,10,0] , 1 , [200,200,1])
+
+
+    
+
+
 
 
 def dummySortFunct(x):
@@ -145,9 +173,3 @@ def animate(i):
     plt.xlim(0,240)
     plt.ylim(0,240)
     plt.gca().set_aspect("equal", "box")
-
-# ax = plt.gcf()
-
-# ani = animation.FuncAnimation(plt.gcf() , animate, interval = 500)
-
-# plt.show()
