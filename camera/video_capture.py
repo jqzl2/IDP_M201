@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import keyboard
+import time
 
 from numpy.core.numeric import Infinity
 
@@ -31,6 +32,7 @@ def undistort(img):
 	return undistorted_img
 
 def start_video(f):
+	dt = 0
 	# Create VideoCapture object and read from camera address
 	cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 
@@ -39,14 +41,16 @@ def start_video(f):
 		print("Error opening video stream")
 
 	count = 0
-	# data_mat = np.zeros(4)
+	data_mat = []
 	# Read until video is completed
-	while cam.isOpened():
+	while cam.isOpened() and len(data_mat) < 10:
 		# Capture frame-by-frame
 		ret, frame = cam.read()
+	
 		if ret == True:
 			# Display the resulting frame
 			frame , data= f(frame)
+			data_mat.append(data)
 			cv2.imshow("test",frame)
 			cv2.waitKey(1)
 
@@ -70,7 +74,7 @@ def start_video(f):
 
 	# Close all the frames
 	cv2.destroyAllWindows()
-	# return data_mat
+	return data_mat
 
 def isolateCenter(img):
 	img = undistort(img)
@@ -204,7 +208,7 @@ def findDummies(img):
 			 centre = np.array(centre)
 			 centres.append(centre)
 
-	return img, np.array(centres)
+	return img, centres
 
 def findContours(img):
 	img = isolateCenter(img)
