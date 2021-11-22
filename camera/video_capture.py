@@ -39,18 +39,16 @@ def start_video(f):
 		print("Error opening video stream")
 
 	count = 0
-	data_mat = np.zeros((10, 3))
+	# data_mat = np.zeros(4)
 	# Read until video is completed
 	while cam.isOpened():
-		for row in data_mat:
 		# Capture frame-by-frame
-			ret, frame = cam.read()
-			if ret == True:
-				# Display the resulting frame
-				frame , data= f(frame)
-				row = data
-				cv2.imshow("test",frame)
-				cv2.waitKey(1)
+		ret, frame = cam.read()
+		if ret == True:
+			# Display the resulting frame
+			frame , data= f(frame)
+			cv2.imshow("test",frame)
+			cv2.waitKey(1)
 
 			# Press Q on keyboard to exit
 			if keyboard.is_pressed('q'):
@@ -60,8 +58,8 @@ def start_video(f):
 			if keyboard.is_pressed('s'):
 				count += 1
 				cv2.imwrite("frame%d.jpg"%count, frame)
-			
 		
+	
 		# Break the loop
 		else:
 			print("Failed to read camera") 
@@ -72,7 +70,7 @@ def start_video(f):
 
 	# Close all the frames
 	cv2.destroyAllWindows()
-	return data_mat
+	# return data_mat
 
 def isolateCenter(img):
 	img = undistort(img)
@@ -201,9 +199,10 @@ def findDummies(img):
 	 	if M['m00'] != 0.0:
 			 x_centre = int(M['m10']/M['m00'])
 			 y_centre = int(M['m01']/M['m00'])
-			 centre = np.array([x_centre, y_centre])
-			 centres.append(centre)
+			 centre = (x_centre, y_centre)
 			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
+			 centre = np.array(centre)
+			 centres.append(centre)
 
 	return img, np.array(centres)
 

@@ -21,8 +21,8 @@ movement_commands = get_movement_commands(path)
 print(path)
 print(movement_commands)
 
-r = start_video(findDummies)
-print(r)
+start_video(findDummies)
+
 
 # if movement_commands:
 #     send_data(movement_commands)
