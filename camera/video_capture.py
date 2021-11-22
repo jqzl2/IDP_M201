@@ -32,7 +32,6 @@ def undistort(img):
 	return undistorted_img
 
 def start_video(f):
-	dt = 0
 	# Create VideoCapture object and read from camera address
 	cam = cv2.VideoCapture("http://localhost:8081/stream/video.mjpeg")
 
@@ -46,7 +45,6 @@ def start_video(f):
 	while cam.isOpened() and len(data_mat) < 10:
 		# Capture frame-by-frame
 		ret, frame = cam.read()
-	
 		if ret == True:
 			# Display the resulting frame
 			frame , data= f(frame)
@@ -205,9 +203,7 @@ def findDummies(img):
 			 y_centre = int(M['m01']/M['m00'])
 			 centre = (x_centre, y_centre)
 			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
-			 centre = np.array(centre)
 			 centres.append(centre)
-
 	return img, centres
 
 def findContours(img):

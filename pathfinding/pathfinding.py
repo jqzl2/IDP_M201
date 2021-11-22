@@ -47,7 +47,7 @@ def pathToInstructions(path, direction, instructions):
 
     goalDirect = 1
     if len(path[0]) == 1:
-        return
+        return instructions
     #change in x
     if path[0][1] != path[0][0]:
         if path[0][0] < 240 - path[1][0]:
@@ -85,9 +85,7 @@ def pathToInstructions(path, direction, instructions):
 
     instructions.append([GoToNum,front,side])
 
-    #print(toPrint)
-
-    pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions)
+    return pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions)
 
 
 def dummySortFunct(x):
