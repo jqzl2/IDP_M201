@@ -4,10 +4,6 @@ from pathfinding.pathfinding import findPath, pathToInstructions
 from wifi.python_wifi import send_data
 import numpy as np
 
-ip = 
-
-robot = [20, 10, 0]
-
 def avg_dummy_positions(p):
     dummy1_xs = []
     dummy1_ys = []
@@ -42,12 +38,16 @@ def avg_dummy_positions(p):
     
     return dummy1, dummy2, dummy3
 
+ip = input('Input Arduino IP address')
+
+robot = [20, 10, 0]
+
 p = start_video(findDummies)
 dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-path = findPath(robot, dummy = [[dummy1[0], dummy1[1], 0]], path = [[robot[0]],[robot[1]]])
+path = findPath(robot, dummy = [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
 instructions = pathToInstructions(path, 1, [])
 r = send_data(ip, instructions)
-
+print(instructions)
 
 
 
