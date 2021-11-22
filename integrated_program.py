@@ -1,7 +1,8 @@
-from keyboard import send
+from camera.video_capture import findDummies, start_video
 from pathfinding.pathfinding import findPath
 from wifi.python_wifi import send_data
 
+# ip = input("Input Arduino IP address")
 
 def get_movement_commands(path):
     commands =[]
@@ -20,6 +21,10 @@ movement_commands = get_movement_commands(path)
 print(path)
 print(movement_commands)
 
-if movement_commands:
-    send_data(movement_commands)
+r = start_video(findDummies)
+print(r)
+
+# if movement_commands:
+#     send_data(movement_commands)
+
 
