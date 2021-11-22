@@ -2,7 +2,7 @@
 
 #include <SharpIR.h>
 
-#include <Servo.h.
+#include <Servo.h>
 
 #define IRPinF A1
 #define IRPinS A0
@@ -45,13 +45,15 @@ int tsop = 0; // variable to store the value read
 int qsd1 = 0;
 int qsd2 = 0;
 
+
+int USDistance; // variable for the distance measurement
+int IRDistance;
+
 // Create the motor shield object with the default I2C address
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 SharpIR frontIR = SharpIR(IRPinF, 20150);
 
-int USDistance; // variable for the distance measurement
-int IRDistance;
 
 SharpIR sideIR = SharpIR(IRPinS, 1080);
 
@@ -59,6 +61,8 @@ SharpIR sideIR = SharpIR(IRPinS, 1080);
 
 Adafruit_DCMotor * ML = AFMS.getMotor(1);
 Adafruit_DCMotor * MR = AFMS.getMotor(2);
+
+Servo leftServo, rightServo;
 
 void setup() {
     Serial.begin(9600); // set up Serial library at 9600 bps
@@ -80,6 +84,11 @@ void setup() {
     pinMode(trigPinSide, OUTPUT); // Sets the trigPin as an OUTPUT
     pinMode(echoPinSide, INPUT); // Sets the echoPin as an INPUT
     pinMode(motorPin, OUTPUT);
+    pinMode(redPin , OUTPUT);
+    pinMode(greenPin, OUTPUT);
+
+    leftServo.attach(10);
+    rightServo.attach(9);
 
 }
 
@@ -355,8 +364,68 @@ void turnOnSpot(int n) {
     drive(0, 0);
 }
 
+int collectDummy(){
+
+  //open door
+  leftServo.write(30);
+  rightServo.write(120);
+
+  
+  
+  goToDistance(10, distanceSide());
+
+  //detect mode
+
+  int dummyMode = DiffDummy();
+
+  if (dummyMode != 3) {
+    digitalWrite(redPin, HIGH);
+  }else{
+    digitalWrite(redPin, LOW);
+  }
+
+  if (dummyMode != 2){
+    digitalWrite(greenPin, HIGH);
+  }else{
+    digitalWrite(greenPin, LOW);
+  }
+  
+  //get closer
+  goToDistance(1 , distanceSide());
+
+  //close doors
+
+  leftServo.write(120);
+  rightServo.write(30);
+  
+  //return mode
+
+  return dummyMode;
+}
+
 void loop() {
-    Serial.println(DiffDummy());
-    Serial.println("");
-    delay(100);
+
+    leftServo.write(90);
+    rightServo.write(70);
+
+    drive(255,255);
+    delay(2000);
+    
+    leftServo.write(30);
+    rightServo.write(120);
+
+    delay(1000);
+
+    leftServo.write(90);
+    rightServo.write(70);
+
+    drive(-255,-255);
+    delay(1000);
+
+    leftServo.write(30);
+    rightServo.write(120);
+
+    delay(1000);
+
+    
 }
