@@ -30,7 +30,7 @@ def findPath(robot , goal, path):
         if robot[2] == 0:
             transitionPoint = [235,5,1]
         else:
-            transitionPoint = [5,235,0]
+            transitionPoint = [5,234,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
     if robot[2] == 1 and robot[0] < robot[1]:
@@ -50,7 +50,7 @@ def pathToInstructions(path, direction, instructions):
 
     goalDirect = 1
     if len(path[0]) == 1:
-        return
+        return instructions
     #change in x
     if path[0][1] != path[0][0]:
         if path[0][0] < 240 - path[1][0]:
@@ -74,46 +74,85 @@ def pathToInstructions(path, direction, instructions):
             side = 240 - path[0][1]
 
     toPrint = "go to " + str(front) + " from the front and " + str(side) + " from the side"
-
-    
-
-    
+     
     diff = (goalDirect - direction) % 4
     if diff == 3:
         diff = -1
     
     if diff != 0:
         toPrint = "rotate " +  str(diff * 90) + " degrees clockwise, then " + toPrint
-        instructions.append([TurnNum,diff,0])
+        instructions.append(str(TurnNum) + "," + str(diff).zfill(3) + "," + str(0).zfill(3))
 
-    instructions.append([GoToNum,front,side])
+    instructions.append(str(GoToNum) + "," + str(front).zfill(3) + "," + str(side).zfill(3))
 
     #print(toPrint)
 
-    pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions)
+    instruct = pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions) , direction
 
+
+    if len(instruct) == 2:
+        instruct = instruct[0]
+
+    return instruct
 def generateInstructions(robot , direction, goal):
     instruct = []
     dummy = True
+    returnToStart = False
+
+    ##this is currently where the goal positions are stored
 
     dummyGoals = [[24,24,0],[50,90,0],[90,50,0],[215,215,1]]
 
-    if len(goal) == 1:
+    if type(goal) == int:
         #this is a dummy goal
+        if goal == 0:
+            returnToStart = True
+
         goal = dummyGoals[goal]
         dummy = False
 
-    path = findPath(robot , goal, [[],[]])
-    print(path)
+    path = findPath(robot , goal, [[robot[0]],[robot[1]]])
+    instruct = pathToInstructions(path, direction, instruct)
+
+
+    for struct in instruct:
+        data = str(struct).split(',')
+        if data[0] == str(TurnNum):
+            direction += int(data[1])
+
+    finalInstruct = ""
+
+    if dummy:
+        finalInstruct = str(CollectDummyNum) + "," + str(240 - goal[1]).zfill(3) + ",000"
+    else:
+        if returnToStart:
+            finalInstruct = str(ReturnToStartNum) + ",000,000"
+        else:
+            finalInstruct = str(DepositDummyNum) + "," + str(goal[1]).zfill(3) + ",000"
+
+    instruct[len(instruct) -1] = finalInstruct
+
+    return instruct , robot, direction % 4
 
 
 
-generateInstructions([10,10,0] , 1 , [200,200,1])
+instruct , robot, direction = generateInstructions([10,10,0] , 1 , [100,220,1])
+print(instruct)
+instruct , robot, direction = generateInstructions(robot , direction , 2)
+print(instruct)
 
+instruct , robot, direction = generateInstructions(robot , direction , [150,175,1])
+print(instruct)
+instruct , robot, direction = generateInstructions(robot , direction , 3)
+print(instruct)
 
-    
+instruct , robot, direction = generateInstructions(robot , direction , [200,100,1])
+print(instruct)
+instruct , robot, direction = generateInstructions(robot , direction , 1)
+print(instruct)
 
-
+instruct , robot, direction = generateInstructions(robot , direction , 0)
+print(instruct)
 
 
 def dummySortFunct(x):
