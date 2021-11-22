@@ -45,7 +45,7 @@ def start_video(f):
 		ret, frame = cam.read()
 		if ret == True:
 			# Display the resulting frame
-			frame = f(frame)
+			frame, data = f(frame)
 			cv2.imshow("test",frame)
 			cv2.waitKey(1)
 
@@ -190,15 +190,18 @@ def findDummies(img):
 
 	cv2.drawContours(imgB , contours[:3] , -1 , (0,255,75) , 2)
 	
+	centres = []
+
 	for i in range(4):
 	 	M = cv2.moments(contours[i])
 	 	if M['m00'] != 0.0:
 			 x_centre = int(M['m10']/M['m00'])
 			 y_centre = int(M['m01']/M['m00'])
 			 centre = (x_centre, y_centre)
+			 centres.append(centre)
 			 img = cv2.circle(img, centre, radius=5, color=(0, 0, 255), thickness=-1)
 
-	return img
+	return img, centres
 
 def findContours(img):
 	img = isolateCenter(img)
