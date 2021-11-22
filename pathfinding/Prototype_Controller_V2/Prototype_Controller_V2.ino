@@ -4,18 +4,9 @@
 
 #include <Servo.h>
 
-#define IRPinF A1
-#define IRPinS A0
-
-#define echoPinFront 4 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPinFront 5 //attach pin D3 Arduino to pin Trig of HC-SR04
-
-#define echoPinSide 8
-#define trigPinSide 9
-
-#define motorPin 7
-
 #define MaxPower 255
+#define USOffset 5
+#define IROffset 2
 
 #define X1 0.0
 #define Y1 0.0
@@ -28,65 +19,85 @@
 
 #define RTurn 0.8625
 
-#define tsopPin 6
+#define IRPinS A0
+#define IRPinF A1
+
 #define qsdPin1 A2
 #define qsdPin2 A3
 
-#define redPin 1
-#define greenPin 2
+#define redPin 2
+#define greenPin 3
 
+#define echoPinFront 4 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPinFront 5 //attach pin D3 Arduino to pin Trig of HC-SR04
 
+#define tsopPin 6
+#define motorPin 7
+#define lineSensorPin 8
 
-// defines variables
+#define echoPinSide 11
+#define trigPinSide 12
+
+#define linePin 13
+
+//pins 8 is free
+//analog 4 is free
+
+//global variable deffinition
 long duration; // variable for the duration of sound wave travel
-int distance; // variable for the distance measurement
+bool carrying = false; //is the robot carrying a dummy
 
 int tsop = 0; // variable to store the value read
 int qsd1 = 0;
 int qsd2 = 0;
 
-
-int USDistance; // variable for the distance measurement
+int USDistance; //variabled for the distance measurementd
 int IRDistance;
 
 // Create the motor shield object with the default I2C address
-
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-SharpIR frontIR = SharpIR(IRPinF, 20150);
 
-
-SharpIR sideIR = SharpIR(IRPinS, 1080);
-
-// Select which 'port' M1, M2, M3 or M4. In this case, M1
-
+//attach 2 motors to variables
 Adafruit_DCMotor * ML = AFMS.getMotor(1);
 Adafruit_DCMotor * MR = AFMS.getMotor(2);
 
+//setting up the IR distnace sensors
+SharpIR frontIR = SharpIR(IRPinF, 20150);
+SharpIR sideIR = SharpIR(IRPinS, 1080);
+
+//setting up the servos globally
 Servo leftServo, rightServo;
 
 void setup() {
+    //starting serial port
     Serial.begin(9600); // set up Serial library at 9600 bps
-    Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
+    //setting up digital pins
+    pinMode(trigPinFront, OUTPUT);
+    pinMode(echoPinFront, INPUT);
+    pinMode(trigPinSide, OUTPUT);
+    pinMode(echoPinSide, INPUT);
+    pinMode(motorPin, OUTPUT);
+    pinMode(redPin, OUTPUT);
+    pinMode(greenPin, OUTPUT);
+    pinMode(lineSensorPin, INPUT);
+
+    //debug prints for motor shield
+    Serial.println("Adafruit Motorshield v2 - DC Motor test!");
     if (!AFMS.begin()) { // create with the default frequency 1.6KHz
         Serial.println("Could not find Motor Shield. Check wiring.");
+        digitalWrite(redPin, HIGH);
         while (1);
     }
+
+    digitalWrite(redPin, LOW);
     Serial.println("Motor Shield found.");
 
     // Set the speed to start, from 0 (off) to 255 (max speed)
-
     ML -> run(RELEASE);
     MR -> run(RELEASE);
 
-    pinMode(trigPinFront, OUTPUT); // Sets the trigPin as an OUTPUT
-    pinMode(echoPinFront, INPUT); // Sets the echoPin as an INPUT
-    pinMode(trigPinSide, OUTPUT); // Sets the trigPin as an OUTPUT
-    pinMode(echoPinSide, INPUT); // Sets the echoPin as an INPUT
-    pinMode(motorPin, OUTPUT);
-    pinMode(redPin , OUTPUT);
-    pinMode(greenPin, OUTPUT);
-
+    //attaching servos to correct ports
     leftServo.attach(10);
     rightServo.attach(9);
 
@@ -97,11 +108,6 @@ int dummyMode() {
     qsd2 = analogRead(qsdPin2);
 
     int Mode = 0;
-
-    //Serial.println((String)"tsop:" + tsop);          // debug value
-    //Serial.println((String)"qsd1:" + qsd1);
-    //Serial.println((String)"qsd2:" + qsd2);
-
     ///*
     // dummy signal detected (1 = 0.049mV)
     if (qsd1 > 200 || qsd2 > 200) {
@@ -115,17 +121,12 @@ int dummyMode() {
             delay(6); //wait for 6ms to take cycle2 reading
             tsop = digitalRead(tsopPin);
 
-            //cycle_a1 = micros();    //time ends
-            //Serial.print("cycle time: ");
-            //Serial.println(cycle_a1-cycle_a);
-
             if (tsop == 0) {
-                //Serial.println((String)"Mode 1 - 11");     // Mode = 1
+                // Mode = 1
                 Mode = 1;
-                // set R and G LED on
                 // 38kHz not detected (2nd cycle)
             } else {
-                //Serial.println((String)"Mode 3 - 12");     // Mode = 3
+                // Mode = 3
                 Mode = 3;
                 // set G LED on
             }
@@ -138,24 +139,21 @@ int dummyMode() {
                 tsop = digitalRead(tsopPin);
                 t++; // check if tsop falls
             } while (t <= 7 && tsop == 1);
-            //cycle_b = micros();
 
             // phase difference! 38kHz detected (1st cycle)
             if (tsop == 0) {
                 // 38kHz detected (2nd cycle)
                 delay(6);
                 tsop = digitalRead(tsopPin);
-                //cycle_b1 = micros();     //time ends
-                //Serial.print("cycle time: ");
-                //Serial.println(cycle_b1-cycle_b);
+                //time ends
                 if (tsop == 0) {
-                    //Serial.println((String)"Mode 1 - 21");   // Mode = 1
+                    // Mode = 1
                     Mode = 1;
                     // set R and G LED on
                 }
                 // 38kHz not detected (2nd cycle)
                 else if (tsop == 1) {
-                    //Serial.println((String)"Mode 3 - 22");   // Mode = 3
+                    // Mode = 3
                     Mode = 3;
                     // set G LED on
                 }
@@ -169,19 +167,16 @@ int dummyMode() {
                     tsop = digitalRead(tsopPin);
                     i++; // check if tsop falls
                 } while (i <= 10 && tsop == 1);
-                //cycle_b2 = micros();
-                //Serial.print("cycle time: ");
-                //Serial.println(cycle_b2-cycle_b);
 
                 // 38kHz undetected (2nd)
                 if (tsop == 1) {
-                    //Serial.println((String)"Mode 2 - 31");   // Mode = 2
+                    // Mode = 2
                     Mode = 2;
                     // set R LED on
                 }
                 // 38kHz detected (2nd)
                 else {
-                    //Serial.println((String)"Mode 3 - 32");   // Mode = 3
+                    // Mode = 3
                     Mode = 3;
                     // set G LED on
                 }
@@ -192,50 +187,55 @@ int dummyMode() {
 }
 
 int DiffDummy() {
+    //setting up loop variables
     int mode_sum = 0;
     int count = 100;
     int mode = 0;
+
+    //test signal 100 times
     while (count != 0) {
         mode = dummyMode();
+        //if no dumm was detected try again
         if (mode != 0) {
             mode_sum += mode - 2;
             count -= 1;
         }
 
     }
-    //Serial.println(mode_sum);
 
     // adjust the threshold value to change accuracy
     if (mode_sum > 50) {
-        //Serial.println("Mode is");
         return 3;
     } else if (mode_sum < -50) {
-        //Serial.println("Mode is");
         return 1;
     } else {
-        //Serial.println("Mode is");
         return 2;
     }
 
-    delay(1);
+    return -1;
 }
 
+//generic controll for motors abstrating the specifics
 void drive(int l, int r) {
+    //if left is backwards
     if (l < 0) {
         ML -> run(BACKWARD);
     } else {
         ML -> run(FORWARD);
     }
 
+    //if right is backwards
     if (r < 0) {
         MR -> run(BACKWARD);
     } else {
         MR -> run(FORWARD);
     }
 
+    //set the correct speeds
     ML -> setSpeed(abs(l));
     MR -> setSpeed(abs(r));
 
+    //start/stop blinking LED
     if ((l != 0) or(r != 0)) {
         digitalWrite(motorPin, HIGH);
     } else {
@@ -243,10 +243,12 @@ void drive(int l, int r) {
     }
 }
 
+//generic code to read an ultrasonic distance sensor
 int readUltraSonic(int pulse, int returnPin) {
+
+    //this code is generic for the model
     digitalWrite(pulse, LOW);
     delayMicroseconds(2);
-
     digitalWrite(pulse, HIGH);
     delayMicroseconds(10);
     digitalWrite(pulse, LOW);
@@ -256,22 +258,28 @@ int readUltraSonic(int pulse, int returnPin) {
     return (duration * 0.034 / 2);
 }
 
+//returns the distance from the front of the vehical
 int distanceFront() {
-    USDistance = frontIR.distance();
 
-    USDistance = readUltraSonic(trigPinFront, echoPinFront);
-    return USDistance;
+    if (carrying) {
+        return frontIR.distance() + IROffset;
+    }
+    return readUltraSonic(trigPinFront, echoPinFront) + USOffset;
 }
 
+//returns the distance from the side of the vehical
 int distanceSide() {
+    //get the two distances
     IRDistance = sideIR.distance();
     USDistance = readUltraSonic(trigPinSide, echoPinSide);
 
+    //debugging prints
     Serial.println(IRDistance);
     Serial.println(USDistance);
     Serial.println("");
     Serial.println("");
 
+    //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
     float Y3 = Y1 - USDistance;
     float Y4 = Y2 - IRDistance;
 
@@ -290,33 +298,58 @@ int distanceSide() {
     return pow((X5 * X5) + (Y5 * Y5), 0.5);
 }
 
-void goToDistance(int goal, int sideGoal) {
+//24 base
+//50 blue
+//90 red
+//24 white
 
+//this code is identical to the goToDistance but uses the line sensor or time to terminate
+//it is its own function in order to optimise for speed
+void enterGoal(int mode, int sideGoal) {
+    //setting up local variables
     int rightSpeed = MaxPower;
     int leftSpeed = MaxPower;
-    int sign = 1;
     float feedBackFactor = 1;
+    float mult;
+    float dt;
 
-    if (goal > distanceFront()) {
-        sign = -1;
+    int distnaces[4] = {
+        24,
+        50,
+        90,
+        24
+    };
+
+    dt = 10 * 3.14 * 40 / 60;
+
+    switch (mode) {
+    case 0:
+    case 3:
+        dt *= 24;
+        break;
+
+    case 1:
+        dt *= 50;
+        break;
+
+    case 2:
+        dt *= 90;
+        break;
     }
 
-    rightSpeed *= sign;
-    leftSpeed *= sign;
+    dt *= 1000;
+    int start = millis();
 
-    drive(rightSpeed, leftSpeed);
+    while (millis() - start < dt and digitalRead(lineSensorPin) == 0) {
 
-    float t1 = millis();
-    float dt, t2;
-    float mult;
-
-    while (sign * distanceFront() > sign * goal) {
-
+        //mult is the difference between the side goal and value
         mult = (float) distanceSide() / (float) sideGoal;
         mult = 1 - mult;
 
+        //feedback factors for fine tuning if required
         mult *= feedBackFactor;
 
+        //if its too far out or too close
         if (mult < 0) {
             rightSpeed = MaxPower * (1 + mult);
             leftSpeed = MaxPower;
@@ -325,11 +358,12 @@ void goToDistance(int goal, int sideGoal) {
             rightSpeed = MaxPower;
         }
 
-        leftSpeed *= sign;
-        rightSpeed *= sign;
+        //correction for forwards backwards
 
+        //drive with corrected speed
         drive(rightSpeed, leftSpeed);
 
+        //debugging prints
         Serial.println(distanceFront());
         Serial.println(distanceSide());
         Serial.println(rightSpeed);
@@ -338,69 +372,144 @@ void goToDistance(int goal, int sideGoal) {
         Serial.println("");
     }
 
+    //make sure wheels always end neutral
     drive(0, 0);
-    delay(1000);
 }
 
+//general movement code
+void goToDistance(int goal, int sideGoal) {
+
+    //setting up local variables
+    int rightSpeed = MaxPower;
+    int leftSpeed = MaxPower;
+    int sign = 1;
+    float feedBackFactor = 1;
+    float mult;
+
+    //setting up forwards vs backwards movement
+    if (goal > distanceFront()) {
+        sign = -1;
+    }
+    rightSpeed *= sign;
+    leftSpeed *= sign;
+
+    //starting the robot off
+    drive(rightSpeed, leftSpeed);
+
+    //if the goal distance is not yet reached
+    while (sign * distanceFront() > sign * goal) {
+        if (sideGoal) {
+
+            //mult is the difference between the side goal and value
+            mult = (float) distanceSide() / (float) sideGoal;
+            mult = 1 - mult;
+
+            //feedback factors for fine tuning if required
+            mult *= feedBackFactor;
+
+            //if its too far out or too close
+            if (mult < 0) {
+                rightSpeed = MaxPower * (1 + mult);
+                leftSpeed = MaxPower;
+            } else {
+                leftSpeed = (1 - mult) * MaxPower;
+                rightSpeed = MaxPower;
+            }
+
+            //correction for forwards backwards
+            leftSpeed *= sign;
+            rightSpeed *= sign;
+
+            //drive with corrected speed
+            drive(rightSpeed, leftSpeed);
+
+            //debugging prints
+            Serial.println(distanceFront());
+            Serial.println(distanceSide());
+            Serial.println(rightSpeed);
+            Serial.println(leftSpeed);
+            Serial.println(mult);
+            Serial.println("");
+        }
+    }
+
+    //make sure wheels always end neutral
+    drive(0, 0);
+}
+
+//this turns corners in a fixed radius, used for going around the obsticals
 void turnCorner(int sign) {
     if (sign > 0) {
         drive(255, 75);
     } else {
         drive(75, 255);
     }
+
     delay(2000);
+
+    //make sure wheels always end neutral
     drive(0, 0);
 }
 
+//this turns on the spot
 void turnOnSpot(int n) {
+    //n is the number of 90 degree turns
     if (n > 0) {
         drive(255, -255);
     } else {
         drive(-255, 255);
     }
 
+    //rturn is calcualted assuming max speed at all times
     delay(abs(n) * RTurn);
 
+    //make sure wheels always end neutral
     drive(0, 0);
 }
 
-int collectDummy(){
+void openDoor() {
+    //open door
+    leftServo.write(30);
+    rightServo.write(120);
+    carrying = false;
+}
 
-  //open door
-  leftServo.write(30);
-  rightServo.write(120);
+void closeDoor() {
+    leftServo.write(120);
+    rightServo.write(30);
+    carrying = true;
+}
 
-  
-  
-  goToDistance(10, distanceSide());
+int collectDummy() {
 
-  //detect mode
+    openDoor();
 
-  int dummyMode = DiffDummy();
+    //get close to dummy
+    goToDistance(4 + USOffset, distanceSide());
 
-  if (dummyMode != 3) {
-    digitalWrite(redPin, HIGH);
-  }else{
-    digitalWrite(redPin, LOW);
-  }
+    delay(5000);
 
-  if (dummyMode != 2){
-    digitalWrite(greenPin, HIGH);
-  }else{
-    digitalWrite(greenPin, LOW);
-  }
-  
-  //get closer
-  goToDistance(1 , distanceSide());
+    //detect mode
+    int dummyMode = DiffDummy();
 
-  //close doors
+    //light up correct LED's
+    if (dummyMode != 3) {
+        digitalWrite(redPin, HIGH);
+    } else {
+        digitalWrite(redPin, LOW);
+    }
+    if (dummyMode != 2) {
+        digitalWrite(greenPin, HIGH);
+    } else {
+        digitalWrite(greenPin, LOW);
+    }
 
-  leftServo.write(120);
-  rightServo.write(30);
-  
-  //return mode
+    //close doors
 
-  return dummyMode;
+    closeDoor();
+
+    //return mode
+    return dummyMode;
 }
 
 void loop() {
@@ -408,9 +517,9 @@ void loop() {
     leftServo.write(90);
     rightServo.write(70);
 
-    drive(255,255);
+    drive(255, 255);
     delay(2000);
-    
+
     leftServo.write(30);
     rightServo.write(120);
 
@@ -419,7 +528,7 @@ void loop() {
     leftServo.write(90);
     rightServo.write(70);
 
-    drive(-255,-255);
+    drive(-255, -255);
     delay(1000);
 
     leftServo.write(30);
@@ -427,5 +536,4 @@ void loop() {
 
     delay(1000);
 
-    
 }
