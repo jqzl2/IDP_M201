@@ -2,6 +2,7 @@ from keyboard import send
 from pathfinding.pathfinding import findPath
 from wifi.python_wifi import send_data
 
+
 def get_movement_commands(path):
     commands =[]
     xs = path[0]
