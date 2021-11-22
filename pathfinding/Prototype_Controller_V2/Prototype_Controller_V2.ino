@@ -6,18 +6,18 @@
 
 #define MaxPower 255
 #define USOffset 5
-#define IROffset 2
+#define IROffset 1
 
 #define X1 0.0
 #define Y1 0.0
 
-#define X2 - 10.0
+#define X2 -10.0
 #define Y2 0.0
 
 #define X3 X1
 #define X4 X2
 
-#define RTurn 0.8625
+#define RTurn 862
 
 #define IRPinS A0
 #define IRPinF A1
@@ -38,7 +38,6 @@
 #define echoPinSide 11
 #define trigPinSide 12
 
-#define linePin 13
 
 //pins 8 is free
 //analog 4 is free
@@ -211,8 +210,6 @@ int DiffDummy() {
     } else {
         return 2;
     }
-
-    return -1;
 }
 
 //generic controll for motors abstrating the specifics
@@ -262,9 +259,9 @@ int readUltraSonic(int pulse, int returnPin) {
 int distanceFront() {
 
     if (carrying) {
-        return frontIR.distance() + IROffset;
+        return frontIR.distance() - IROffset;
     }
-    return readUltraSonic(trigPinFront, echoPinFront) + USOffset;
+    return readUltraSonic(trigPinFront, echoPinFront) - USOffset;
 }
 
 //returns the distance from the side of the vehical
@@ -273,12 +270,6 @@ int distanceSide() {
     IRDistance = sideIR.distance();
     USDistance = readUltraSonic(trigPinSide, echoPinSide);
 
-    //debugging prints
-    Serial.println(IRDistance);
-    Serial.println(USDistance);
-    Serial.println("");
-    Serial.println("");
-
     //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
     float Y3 = Y1 - USDistance;
     float Y4 = Y2 - IRDistance;
@@ -286,7 +277,7 @@ int distanceSide() {
     float P1 = -1 * X3;
     float P2 = -1 * Y3;
 
-    float C1 = X4 - X3;
+    float C1 = X4 - X3;0
     float C2 = Y4 - Y3;
 
     float t = (P1 * C1) + (P2 * C2);
@@ -461,7 +452,7 @@ void turnOnSpot(int n) {
     }
 
     //rturn is calcualted assuming max speed at all times
-    delay(abs(n) * RTurn);
+    delay((int)(abs(n) * 1200));
 
     //make sure wheels always end neutral
     drive(0, 0);
@@ -475,8 +466,8 @@ void openDoor() {
 }
 
 void closeDoor() {
-    leftServo.write(120);
-    rightServo.write(30);
+    leftServo.write(75);
+    rightServo.write(75);
     carrying = true;
 }
 
@@ -485,13 +476,11 @@ int collectDummy() {
     openDoor();
 
     //get close to dummy
-    goToDistance(4 + USOffset, distanceSide());
+    goToDistance(0, distanceSide());
 
-    delay(5000);
 
     //detect mode
     int dummyMode = DiffDummy();
-
     //light up correct LED's
     if (dummyMode != 3) {
         digitalWrite(redPin, HIGH);
@@ -504,6 +493,12 @@ int collectDummy() {
         digitalWrite(greenPin, LOW);
     }
 
+    delay(5555);[
+
+    drive(255,255);
+    delay(238);
+    drive(0,0);
+
     //close doors
 
     closeDoor();
@@ -514,26 +509,8 @@ int collectDummy() {
 
 void loop() {
 
-    leftServo.write(90);
-    rightServo.write(70);
-
-    drive(255, 255);
-    delay(2000);
-
-    leftServo.write(30);
-    rightServo.write(120);
-
-    delay(1000);
-
-    leftServo.write(90);
-    rightServo.write(70);
-
-    drive(-255, -255);
-    delay(1000);
-
-    leftServo.write(30);
-    rightServo.write(120);
-
-    delay(1000);
+  goToDistance(10,10);
+  turnOnSpot(1);
+  
 
 }
