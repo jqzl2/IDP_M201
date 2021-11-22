@@ -1,15 +1,14 @@
+from keyboard import send
 from camera.video_capture import findDummies, start_video
 from pathfinding.pathfinding import findPath, pathToInstructions
 from wifi.python_wifi import send_data
 import numpy as np
 
-# ip = input("Input Arduino IP address")
+ip = 
 
 robot = [20, 10, 0]
-path = findPath(robot, dummy = [[50,240,1], 0] ,  path = [[robot[0]],[robot[1]]])
-instructions = pathToInstructions(path, 1, [])
 
-def get_dummy_positions(r):
+def avg_dummy_positions(p):
     dummy1_xs = []
     dummy1_ys = []
     dummy2_xs = []
@@ -17,7 +16,7 @@ def get_dummy_positions(r):
     dummy3_xs = []
     dummy3_ys = []
 
-    for frame in r:
+    for frame in p:
         dummy1 = frame[0]
         dummy2 = frame[1]
         dummy1_xs.append(dummy1[0])
@@ -43,9 +42,11 @@ def get_dummy_positions(r):
     
     return dummy1, dummy2, dummy3
 
-r = start_video(findDummies)
-p = get_dummy_positions(r)
-
+p = start_video(findDummies)
+dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+path = findPath(robot, dummy = [[dummy1[0], dummy1[1], 0]], path = [[robot[0]],[robot[1]]])
+instructions = pathToInstructions(path, 1, [])
+r = send_data(ip, instructions)
 
 
 
