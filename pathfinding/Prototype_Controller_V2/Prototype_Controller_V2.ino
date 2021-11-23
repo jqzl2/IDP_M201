@@ -4,20 +4,24 @@
 
 #include <Servo.h>
 
+#include <math.h>
+
 #define MaxPower 255
 #define USOffset 5
 #define IROffset 1
+#define feedBackFactor 1
 
 #define X1 0.0
 #define Y1 0.0
 
-#define X2 -10.0
+#define X2 - 10.0
 #define Y2 0.0
 
 #define X3 X1
 #define X4 X2
 
-#define RTurn 862
+//#define RTurn 862
+#define RTurn 1000
 
 #define IRPinS A0
 #define IRPinF A1
@@ -38,13 +42,13 @@
 #define echoPinSide 11
 #define trigPinSide 12
 
-
 //pins 8 is free
 //analog 4 is free
 
 //global variable deffinition
 long duration; // variable for the duration of sound wave travel
 bool carrying = false; //is the robot carrying a dummy
+bool collecting = false;
 
 int tsop = 0; // variable to store the value read
 int qsd1 = 0;
@@ -253,16 +257,27 @@ int readUltraSonic(int pulse, int returnPin) {
     digitalWrite(pulse, LOW);
 
     duration = pulseIn(returnPin, HIGH);
-
-    return (duration * 0.034 / 2);
+    Serial.print("Duration: ");
+    Serial.println(duration);
+    if (duration) {
+        return (duration * 0.034 / 2);
+    }
+    return 240;
 }
 
 //returns the distance from the front of the vehical
 int distanceFront() {
 
-    if (carrying) {
-        return frontIR.distance() - IROffset;
+    int fDist = frontIR.distance() - IROffset;
+
+    //if the robot is moving a dummy or
+    //if the robot is at the limits of the US sensor, and is not collecting
+    if (carrying or(fDist > 70 and!collecting)) {
+      //just use the IR sensor
+        return fDist;
     }
+
+    //just use the US sensor
     return readUltraSonic(trigPinFront, echoPinFront) - USOffset;
 }
 
@@ -288,7 +303,32 @@ int distanceSide() {
     float X5 = X3 + (C1 * t);
     float Y5 = Y3 + (C2 * t);
 
-    return pow((X5 * X5) + (Y5 * Y5), 0.5);
+    return pow((X5 * X5) + (Y5 * Y5), 0.5) + 10;
+}
+
+//this returns the angle between the robot and the wall, used for turning
+float angleSide() {
+    //get the two distances
+    IRDistance = sideIR.distance();
+    USDistance = readUltraSonic(trigPinSide, echoPinSide);
+
+    //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
+    float Y3 = Y1 - USDistance;
+    float Y4 = Y2 - IRDistance;
+
+    float P1 = -1 * X3;
+    float P2 = -1 * Y3;
+
+    float C1 = X4 - X3;
+    float C2 = Y4 - Y3;
+
+    float t = (P1 * C1) + (P2 * C2);
+    t /= (C1 * C1) + (C2 * C2);
+
+    float X5 = X3 + (C1 * t);
+    float Y5 = Y3 + (C2 * t);
+
+    return atan(X5 / Y5);
 }
 
 //24 base
@@ -302,7 +342,6 @@ void enterGoal(int mode, int sideGoal) {
     //setting up local variables
     int rightSpeed = MaxPower;
     int leftSpeed = MaxPower;
-    float feedBackFactor = 1;
     float mult;
     float dt;
 
@@ -335,48 +374,38 @@ void enterGoal(int mode, int sideGoal) {
 
     while (millis() - start < dt and digitalRead(lineSensorPin) == 0) {
 
-        //mult is the difference between the side goal and value
-        mult = (float) distanceSide() / (float) sideGoal;
-        mult = 1 - mult;
-
-        //feedback factors for fine tuning if required
-        mult *= feedBackFactor;
-
-        //if its too far out or too close
-        if (mult < 0) {
-            rightSpeed = MaxPower * (1 + mult);
-            leftSpeed = MaxPower;
-        } else {
-            leftSpeed = (1 - mult) * MaxPower;
-            rightSpeed = MaxPower;
-        }
-
-        //correction for forwards backwards
-
-        //drive with corrected speed
-        drive(rightSpeed, leftSpeed);
-
-        //debugging prints
-        Serial.println(distanceFront());
-        Serial.println(distanceSide());
-        Serial.println(rightSpeed);
-        Serial.println(leftSpeed);
-        Serial.println(mult);
-        Serial.println("");
+        adjustDrive(sideGoal, 1);
     }
 
     //make sure wheels always end neutral
     drive(0, 0);
 }
 
-void goToDistanceWrapper(int goal, int sideGoal){
-  if (carrying){
-    goToDistance(goal - 30, sideGoal);
-    drive(255,255);
-    delay(3000);
-  }else{
-    goToDistance(goal,sideGoal);
-  }
+
+// this is a wrapper to deal with the carrying logic
+// the robot does each goTo multiple times to account for bad sensor reads
+void goToDistanceWrapper(int goal, int sideGoal) {
+    if (carrying) {
+        goToDistance(goal + 30, sideGoal);
+        goToDistance(goal + 30, sideGoal);
+        goToDistance(goal + 30, sideGoal);
+        goToDistance(goal + 30, sideGoal);
+        goToDistance(goal + 30, sideGoal);
+        goToDistance(goal + 30, sideGoal);
+        maintainDistance(2000, sideGoal);
+        drive(0, 0);
+
+    } else {
+        goToDistance(goal, sideGoal);
+        goToDistance(goal, sideGoal);
+        goToDistance(goal, sideGoal);
+    }
+
+    delay(100);
+
+    if (abs(distanceFront() - goal) / goal > 0.05 and carrying == false) {
+        goToDistanceWrapper(goal, sideGoal);
+    }
 }
 //general movement code
 void goToDistance(int goal, int sideGoal) {
@@ -385,7 +414,6 @@ void goToDistance(int goal, int sideGoal) {
     int rightSpeed = MaxPower;
     int leftSpeed = MaxPower;
     int sign = 1;
-    float feedBackFactor = 1;
     float mult;
 
     //setting up forwards vs backwards movement
@@ -401,42 +429,68 @@ void goToDistance(int goal, int sideGoal) {
     //if the goal distance is not yet reached
     while (sign * distanceFront() > sign * goal) {
         if (sideGoal) {
-
-            //mult is the difference between the side goal and value
-            mult = (float) distanceSide() / (float) sideGoal;
-            mult = 1 - mult;
-
-            //feedback factors for fine tuning if required
-            mult *= feedBackFactor;
-
-            //if its too far out or too close
-            if (mult < 0) {
-                rightSpeed = MaxPower * (1 + mult);
-                leftSpeed = MaxPower;
-            } else {
-                leftSpeed = (1 - mult) * MaxPower;
-                rightSpeed = MaxPower;
-            }
-
-            //correction for forwards backwards
-            leftSpeed *= sign;
-            rightSpeed *= sign;
-
-            //drive with corrected speed
-            drive(rightSpeed, leftSpeed);
-
-            //debugging prints
-            Serial.println(distanceFront());
-            Serial.println(distanceSide());
-            Serial.println(rightSpeed);
-            Serial.println(leftSpeed);
-            Serial.println(mult);
-            Serial.println("");
+            adjustDrive(sideGoal, sign);
         }
     }
 
     //make sure wheels always end neutral
     drive(0, 0);
+}
+
+//this is the same as goTo but instead it aims to drive straight (near a wall) for a time
+void maintainDistance(int deltaTime, int sideGoal) {
+    //setting up local variables
+    int rightSpeed = MaxPower;
+    int leftSpeed = MaxPower;
+    float mult;
+    float dt;
+    dt = deltaTime;
+    int start = millis();
+
+    while (millis() - start < dt) {
+        adjustDrive(sideGoal, 1);
+    }
+
+    //make sure wheels always end neutral
+    drive(0, 0);
+}
+
+//this is the code that adjusts the robot speeds to follow walls
+void adjustDrive(int sideGoal, int sign) {
+    float mult;
+    int rightSpeed, leftSpeed;
+
+    //mult is the difference between the side goal and value
+    mult = (float) distanceSide() / (float) sideGoal;
+    mult = 1 - mult;
+
+    //feedback factors for fine tuning if required
+    mult *= feedBackFactor;
+
+    //if its too far out or too close
+    if (mult < 0) {
+        rightSpeed = MaxPower * (1 + mult);
+        leftSpeed = MaxPower;
+    } else {
+        leftSpeed = (1 - mult) * MaxPower;
+        rightSpeed = MaxPower;
+    }
+
+    //correction for forwards backwards
+    leftSpeed *= sign;
+    rightSpeed *= sign;
+
+    //drive with corrected speed
+    drive(rightSpeed, leftSpeed);
+
+    //debugging prints
+    Serial.println(distanceFront());
+    Serial.println(distanceSide());
+    Serial.println(rightSpeed);
+    Serial.println(leftSpeed);
+    Serial.println(mult);
+    Serial.println("");
+
 }
 
 //this turns corners in a fixed radius, used for going around the obsticals
@@ -463,14 +517,20 @@ void turnOnSpot(int n) {
     }
 
     //rturn is calcualted assuming max speed at all times
-    delay((int)(abs(n) * 1200));
+    delay((int)(abs(n) * RTurn));
+
+    
+    //this is used to ensure that the robot is close to straight
+    //not neccessary but makes robot run faster in the end
+    while (angleSide() < 0) {
+        delay(1);
+    }
 
     //make sure wheels always end neutral
     drive(0, 0);
 }
 
 void openDoor() {
-    //open door
     leftServo.write(30);
     rightServo.write(120);
     carrying = false;
@@ -482,16 +542,21 @@ void closeDoor() {
     carrying = true;
 }
 
+//dummy collection logic
 int collectDummy(int dummySide) {
+  //special mode used to force the robot to use the US sensor
+    collecting = true;
 
+    //ensures that the doors are open
     openDoor();
+    
 
     //get close to dummy
     goToDistance(0, dummySide);
 
-
     //detect mode
     int dummyMode = DiffDummy();
+    
     //light up correct LED's
     if (dummyMode != 3) {
         digitalWrite(redPin, HIGH);
@@ -503,30 +568,46 @@ int collectDummy(int dummySide) {
     } else {
         digitalWrite(greenPin, LOW);
     }
-
+    
+    //wait for at least 5 seconds
     delay(5555);
 
-    drive(255,255);
+    //get closer to the dummy
+    drive(255, 255);
     delay(238);
-    drive(0,0);
+    drive(0, 0);
 
     //close doors
 
     closeDoor();
+
+    //back to default mode handling
+    collecting = false;
 
     //return mode
     return dummyMode;
 }
 
 void loop() {
-  goToDistanceWrapper(5,5);
-  turnOnSpot(1);
+    //  goToDistanceWrapper(10,15);
+    //  turnOnSpot(1);
+    //  goToDistanceWrapper(10,15);
+    //  turnOnSpot(1);
+    //  closeDoor();
+    //  goToDistanceWrapper(10,15);
+    //  turnOnSpot(1);
+    //  goToDistanceWrapper(70,15);
+    //  turnOnSpot(1);
+    //  enterGoal(1,80);
 
-  goToDistanceWrapper(50,5);
-  turnOnSpot(1);
-  goToDistanceWrapper(5,50);
+    goToDistanceWrapper(5, 15);
+    turnOnSpot(1);
+    int mode = collectDummy(15);
+    goToDistanceWrapper(5, 15);
+    turnOnSpot(1);
+    goToDistanceWrapper(70, 15);
+    turnOnSpot(1);
+    enterGoal(1, 80);
 
-  
-  
-
+    delay(100000);
 }
