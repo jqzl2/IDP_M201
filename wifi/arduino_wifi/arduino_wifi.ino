@@ -7,7 +7,6 @@ char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;                 // your network key index number (needed only for WEP)
 
-String dummy_identity = 1;
 int status = WL_IDLE_STATUS;
 WiFiServer server(80);
 String readString;
@@ -62,12 +61,16 @@ void setup() {
 }
 
 
-void loop() {
+char* wifiWrapper() {
   WiFiClient client = server.available();   // listen for incoming clients
+
+  while (!client){
+    client = server.available();
+  }
 
   if (client) {                             // if you get a client,
     String currentLine = "";                // make a String to hold incoming data from the client
-    String data = "";
+    char* data;
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
@@ -84,7 +87,7 @@ void loop() {
             client.println();
 
             // the content of the HTTP response follows the header:
-            client.print(dummy_identity);
+            client.print("Arduino has received PC request");
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -96,17 +99,23 @@ void loop() {
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
           bool digit = isDigit(c);
-          if (data.length() < 3 && digit == true){
+          //if (data.length() <3 && digit == true){
             data += c;
-          }
+          //}
         }
       }
     }
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
-    
+    Serial.println(data);
+    return data;
   }
+}
+
+void loop(){
+  char* data = wifiWrapper();
+  Serial.println(strtok(data,'!'));
 }
 
 

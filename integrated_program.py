@@ -163,7 +163,7 @@ instructString = ""
 
 for struct in instructions:
     instructString+=struct + "."
-arduino1.request('GET', 'http://192.168.137.53/?lol=!' + instructString + '!')
+arduino1.request('GET', 'http://192.168.137.24/?lol=!' + instructString + '!')
 
 
 
