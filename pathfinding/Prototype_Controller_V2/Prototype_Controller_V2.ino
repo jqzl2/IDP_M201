@@ -100,6 +100,8 @@ void setup() {
     leftServo.attach(10);
     rightServo.attach(9);
 
+    openDoor();
+
 }
 
 int dummyMode() {
@@ -367,6 +369,15 @@ void enterGoal(int mode, int sideGoal) {
     drive(0, 0);
 }
 
+void goToDistanceWrapper(int goal, int sideGoal){
+  if (carrying){
+    goToDistance(goal - 30, sideGoal);
+    drive(255,255);
+    delay(3000);
+  }else{
+    goToDistance(goal,sideGoal);
+  }
+}
 //general movement code
 void goToDistance(int goal, int sideGoal) {
 
@@ -466,17 +477,17 @@ void openDoor() {
 }
 
 void closeDoor() {
-    leftServo.write(75);
-    rightServo.write(75);
+    leftServo.write(90);
+    rightServo.write(60);
     carrying = true;
 }
 
-int collectDummy() {
+int collectDummy(int dummySide) {
 
     openDoor();
 
     //get close to dummy
-    goToDistance(0, distanceSide());
+    goToDistance(0, dummySide);
 
 
     //detect mode
@@ -508,11 +519,14 @@ int collectDummy() {
 }
 
 void loop() {
-
-  openDoor();
-
-  goToDistance(5,5);
+  goToDistanceWrapper(5,5);
   turnOnSpot(1);
+
+  goToDistanceWrapper(50,5);
+  turnOnSpot(1);
+  goToDistanceWrapper(5,50);
+
+  
   
 
 }
