@@ -1,8 +1,8 @@
 from keyboard import send
 from camera.video_capture import findDummies, start_video
-from pathfinding.pathfinding import findPath, pathToInstructions
-from wifi.python_wifi import send_data
+from pathfinding.pathfinding import findPath, generateInstructions
 import numpy as np
+import urllib3
 
 def avg_dummy_positions(p):
     dummy1_xs = []
@@ -38,16 +38,19 @@ def avg_dummy_positions(p):
     
     return dummy1, dummy2, dummy3
 
-ip = input('Input Arduino IP address')
-
 robot = [20, 10, 0]
+direction =1
 
-p = start_video(findDummies)
-dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-path = findPath(robot, dummy = [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
-instructions = pathToInstructions(path, 1, [])
-r = send_data(ip, instructions)
+# p = start_video(findDummies)
+# print(p)
+# dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+# path = findPath(robot, dummy = [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
+instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
 print(instructions)
+
+
+arduino1 = urllib3.PoolManager()
+arduino1.request('GET', 'http://192.168.137.14/?lol=' + instructions[0] + '.' + instructions[1])
 
 
 

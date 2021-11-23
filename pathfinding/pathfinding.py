@@ -136,23 +136,23 @@ def generateInstructions(robot , direction, goal):
 
 
 
-instruct , robot, direction = generateInstructions([10,10,0] , 1 , [100,220,1])
-print(instruct)
-instruct , robot, direction = generateInstructions(robot , direction , 2)
-print(instruct)
+# instruct , robot, direction = generateInstructions([10,10,0] , 1 , [100,220,1])
+# print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , 2)
+# print(instruct)
 
-instruct , robot, direction = generateInstructions(robot , direction , [150,175,1])
-print(instruct)
-instruct , robot, direction = generateInstructions(robot , direction , 3)
-print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , [150,175,1])
+# print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , 3)
+# print(instruct)
 
-instruct , robot, direction = generateInstructions(robot , direction , [200,100,1])
-print(instruct)
-instruct , robot, direction = generateInstructions(robot , direction , 1)
-print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , [200,100,1])
+# print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , 1)
+# print(instruct)
 
-instruct , robot, direction = generateInstructions(robot , direction , 0)
-print(instruct)
+# instruct , robot, direction = generateInstructions(robot , direction , 0)
+# print(instruct)
 
 
 def dummySortFunct(x):
