@@ -159,7 +159,11 @@ print(instructions)
 
 
 arduino1 = urllib3.PoolManager()
-arduino1.request('GET', 'http://192.168.137.14/?lol=' + instructions[0] + '.' + instructions[1])
+instructString = ""
+
+for struct in instructions:
+    instructString+=struct + "."
+arduino1.request('GET', 'http://192.168.137.53/?lol=!' + instructString + '!')
 
 
 
