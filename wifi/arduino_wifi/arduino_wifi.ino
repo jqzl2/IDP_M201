@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <WiFiNINA.h>
+#include <string.h>
 
 #include "arduino_secrets.h" 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
@@ -61,7 +62,7 @@ void setup() {
 }
 
 
-char* wifiWrapper() {
+String wifiWrapper() {
   WiFiClient client = server.available();   // listen for incoming clients
 
   while (!client){
@@ -70,7 +71,7 @@ char* wifiWrapper() {
 
   if (client) {                             // if you get a client,
     String currentLine = "";                // make a String to hold incoming data from the client
-    char* data;
+    String request;
     while (client.connected()) {            // loop while the client's connected
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
@@ -96,27 +97,30 @@ char* wifiWrapper() {
           } else {    // if you got a newline, then clear currentLine:
             currentLine = "";
           }
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+        } 
+        else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
-          bool digit = isDigit(c);
-          //if (data.length() <3 && digit == true){
-            data += c;
-          //}
+          request += c;
         }
       }
     }
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
-    Serial.println(data);
-    return data;
+    return request;
   }
 }
 
 void loop(){
-  char* data = wifiWrapper();
-  Serial.println(strtok(data,'!'));
+  String request = wifiWrapper();
+  char * crequest = new char [request.length() + 1];
+  strcpy(crequest, request.c_str());
+  char * commands = strtok(crequest, "!");
+  int count = 0;
+  while (commands != 0 && count < 5){
+    count += 1;
+    Serial.println(commands);
+    commands = strtok(NULL, "!");
+  }
+  delete[] crequest;
 }
-
-
-        

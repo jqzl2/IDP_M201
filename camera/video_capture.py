@@ -57,9 +57,9 @@ def start_video(f):
 				break
 			
 			# Press S to save frame
-			if keyboard.is_pressed('s'):
-				count += 1
-				cv2.imwrite("frame%d.jpg"%count, frame)
+			# if keyboard.is_pressed('s'):
+			# 	count += 1
+			# 	cv2.imwrite("frame%d.jpg"%count, frame)
 		
 	
 		# Break the loop
