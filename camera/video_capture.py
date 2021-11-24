@@ -42,11 +42,11 @@ def start_video(f):
 	count = 0
 	data_mat = []
 	# Read until video is completed
-	while cam.isOpened() and len(data_mat) < 10:
+	while cam.isOpened() and len(data_mat) < 50:
 		# Capture frame-by-frame
 		ret, frame = cam.read()
 		if ret == True:
-			# Display the resulting frame
+			# Display the r0esulting frame
 			frame , data= f(frame)
 			data_mat.append(data)
 			cv2.imshow("test",frame)

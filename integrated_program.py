@@ -128,7 +128,7 @@ def avg_dummy_positions(p):
     m = np.matrix([dummy_xs , dummy_ys])
     print(m)
     print("")
-    clusterIds = dbscan(m, 5, 2)
+    clusterIds = dbscan(m, 15, 0)
 
     metaDummies = []
 
@@ -137,8 +137,8 @@ def avg_dummy_positions(p):
             while len(metaDummies) < clusterIds[i]:
                 metaDummies.append([[],[]])
 
-            metaDummies[clusterIds[i]-1][0].append(dummy_xs[i])
-            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i])
+            metaDummies[clusterIds[i]-1][0].append(240 - (dummy_xs[i] * ( 240 / (((201-878)**2 + (735-705)**2)**0.5))))
+            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i] * (240 / (((201-178)**2 + (735-76)**2)**0.5)))
 
     metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
 
@@ -167,6 +167,14 @@ def run():
 
         arduino1.request('GET', 'http://192.168.137.166/?instructions=!' + instructString + '!')
 
+robot = [20,20]
+direction = 1
+
+p = start_video(findDummies)
+dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+print(dummy1, dummy2, dummy3)
+path = findPath(robot, goal =  [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
+instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
