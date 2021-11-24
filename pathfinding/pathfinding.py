@@ -112,6 +112,7 @@ def generateInstructions(robot , direction, goal):
         dummy = False
 
     path = findPath(robot , goal, [[robot[0]],[robot[1]]])
+    print(path)
     instruct = pathToInstructions(path, direction, instruct)
 
 

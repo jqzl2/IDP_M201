@@ -151,30 +151,36 @@ def avg_dummy_positions(p):
 def run():
     robot = [20, 10, 0]
     direction = 1
-    p = start_video(findDummies)
-    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    dummies = [dummy1, dummy2, dummy3]
-    dummies.sort() # sorting not done yet
+    # p = start_video(findDummies)
+    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    # dummies = [dummy1, dummy2, dummy3]
+    # dummies.sort() # sorting not done yet
 
-    for dummy in dummies:
-        path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
-        instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
-        arduino1 = urllib3.PoolManager()
-        instructString = ""
+    dummies = [[50,200,1]]
 
-        for struct in instructions:
-            instructString+=struct + "."
 
-        arduino1.request('GET', 'http://192.168.137.166/?instructions=!' + instructString + '!')
+    # for dummy in dummies:
+    #     path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
+    #     robot = [20,10,0]
+    #     instructions, robot, direction = generateInstructions(robot, direction, [220,200,1])
+    #     arduino1 = urllib3.PoolManager()
+    #     instructString =''
 
-robot = [20,20]
-direction = 1
+    #     for struct in instructions:
+    #         instructString+=struct + "."
+    command ="2,100,000.3,100,000"
+    arduino1 = urllib3.PoolManager()
+    response =  arduino1.request('GET', 'http://192.168.137.191/?instructions=!' + command + '!')
+    print(response.status)
+    print(response.data)
+# robot = [20,20]
+# direction = 1
 
-p = start_video(findDummies)
-dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-print(dummy1, dummy2, dummy3)
-path = findPath(robot, goal =  [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
-instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
+# p = start_video(findDummies)
+# dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+# print(dummy1, dummy2, dummy3)
+# path = findPath(robot, goal =  [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
+# instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
