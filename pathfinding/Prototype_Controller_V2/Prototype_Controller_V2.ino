@@ -327,6 +327,12 @@ float angleSide() {
 
     float X5 = X3 + (C1 * t);
     float Y5 = Y3 + (C2 * t);
+    
+    if (X5 < 0){
+      return 1.0;
+    }
+
+    return -1.0;
 
     return atan(X5 / Y5);
 }
@@ -345,27 +351,23 @@ void enterGoal(int mode, int sideGoal) {
     float mult;
     float dt;
 
-    int distnaces[4] = {
-        24,
-        50,
-        90,
-        24
-    };
-
     dt = 10 * 3.14 * 40 / 60;
 
     switch (mode) {
     case 0:
-    case 3:
-        dt *= 24;
-        break;
-
     case 1:
-        dt *= 50;
+        dt *= 24;
+        sideGoal = 24;
         break;
 
     case 2:
+        dt *= 50;
+        sideGoal = 90;
+        break;
+
+    case 3:
         dt *= 90;
+        sideGoal = 50;
         break;
     }
 
@@ -376,6 +378,12 @@ void enterGoal(int mode, int sideGoal) {
 
         adjustDrive(sideGoal, 1);
     }
+
+    drive(255,255);
+    delay(500);
+    openDoor();
+    drive(-255,-255);
+    delay(500);
 
     //make sure wheels always end neutral
     drive(0, 0);
@@ -589,25 +597,7 @@ int collectDummy(int dummySide) {
 }
 
 void loop() {
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  closeDoor();
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  goToDistanceWrapper(70,15);
-    //  turnOnSpot(1);
-    //  enterGoal(1,80);
-
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-    int mode = collectDummy(15);
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-    goToDistanceWrapper(70, 15);
-    turnOnSpot(1);
-    enterGoal(1, 80);
-
-    delay(100000);
+  turnOnSpot(1);
+  delay(10000);
+  
 }
