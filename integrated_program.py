@@ -148,17 +148,17 @@ def avg_dummy_positions(p):
     
     return dummy1, dummy2, dummy3
 
-robot = [20, 10, 0]
-direction = 1
+def run():
+    robot = [20, 10, 0]
+    direction = 1
+    p = start_video(findDummies)
+    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    dummies = [dummy1, dummy2, dummy3]
+    dummies.sort() # sorting not done yet
 
-# p = start_video(findDummies)
-# dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-
-while True:
-    if keyboard.is_pressed('s'):
-        path = findPath(robot, goal = [200, 234, 1], path = [[robot[0]],[robot[1]]])
-        instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
-
+    for dummy in dummies:
+        path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
+        instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
         arduino1 = urllib3.PoolManager()
         instructString = ""
 
@@ -166,9 +166,13 @@ while True:
             instructString+=struct + "."
 
         arduino1.request('GET', 'http://192.168.137.166/?instructions=!' + instructString + '!')
-    
-    elif keyboard.is_pressed('e'):
-        break
+
+
+if __name__ == "__main__":
+    print("*** WacMan Program ***")
+    run()
+
+
 
 
 

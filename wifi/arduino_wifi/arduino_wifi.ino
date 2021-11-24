@@ -112,15 +112,35 @@ String wifiWrapper() {
 }
 
 void loop(){
+  String commands;
   String request = wifiWrapper();
   char * crequest = new char [request.length() + 1];
   strcpy(crequest, request.c_str());
-  char * commands = strtok(crequest, "!");
-  int count = 0;
-  while (commands != 0 && count < 5){
-    count += 1;
-    Serial.println(commands);
-    commands = strtok(NULL, "!");
+  char * data = strtok(crequest, "!");
+  
+  int i = 0;
+  while (data != 0 && i < 4){
+    i += 1;
+    //Serial.println(data);
+    data = strtok(NULL, "!");
+    if (i == 1){
+      commands = data;
+      break;
+    }
   }
   delete[] crequest;
+  Serial.println(commands);
+
+  int count = 0;
+  char * ccommands = new char [commands.length() + 1];
+  strcpy(ccommands, commands.c_str());
+  char * command = strtok(ccommands, ".");
+  while (command != 0){
+    Serial.println(command);
+    count += 1;
+    command = strtok(NULL , ".");
+ }
+ 
+ String tasklist[count];
+
 }
