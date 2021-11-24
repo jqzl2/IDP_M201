@@ -135,24 +135,42 @@ void loop(){
   char * ccommands = new char [commands.length() + 1];
   strcpy(ccommands, commands.c_str());
   char * command = strtok(ccommands, ".");
+
   while (command != 0){    
     Serial.println(command);
 
-    //String parsingArray = strtok(command , ",");
+    String parsingArray = strtok(command , ",");
 
-    int operation = strtok(command , ",").toInt(); // turn/goto/dummymode
-    int input1 = strtok(NULL , ",").toInt(); //
-    int input2 = strtok(NULL , ",").toInt(); // 
+    int operation = parsingArray.toInt(); // turn/goto/dummymode
+    parsingArray = strtok(NULL , ",");
+    
+    int input1 = parsingArray.toInt(); //
+
+    parsingArray = strtok(NULL , ",");
+    int input2 = parsingArray.toInt(); // 
+
+    Serial.println(operation);
+    Serial.println(input1);
+    Serial.println(input2);
     
 
-    switch(operation){
-      case 0:
-      //goTo
-        break;
-    }
+//    switch(operation){
+//      case 0:
+//      //goTo
+//      break;
+//    }
     
     count += 1;
-    command = strtok(NULL , ".");
+    i = 0;
+
+    command = strtok(ccommands, ".");
+    Serial.println(command);
+    
+    while(i < count){
+      command = strtok(NULL,".");
+      Serial.println(command);
+      i++;
+    }
  }
  
  String tasklist[count];
