@@ -135,8 +135,22 @@ void loop(){
   char * ccommands = new char [commands.length() + 1];
   strcpy(ccommands, commands.c_str());
   char * command = strtok(ccommands, ".");
-  while (command != 0){
+  while (command != 0){    
     Serial.println(command);
+
+    //String parsingArray = strtok(command , ",");
+
+    int operation = strtok(command , ",").toInt(); // turn/goto/dummymode
+    int input1 = strtok(NULL , ",").toInt(); //
+    int input2 = strtok(NULL , ",").toInt(); // 
+    
+
+    switch(operation){
+      case 0:
+      //goTo
+        break;
+    }
+    
     count += 1;
     command = strtok(NULL , ".");
  }
