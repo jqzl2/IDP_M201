@@ -151,10 +151,12 @@ def avg_dummy_positions(p):
 def run():
     robot = [20, 10, 0]
     direction = 1
-    p = start_video(findDummies)
-    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    dummies = [dummy1, dummy2, dummy3]
-    dummies.sort() # sorting not done yet
+    #p = start_video(findDummies)
+    #dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    #dummies = [dummy1, dummy2, dummy3]
+    #dummies.sort() # sorting not done yet
+
+    dummies = [[50,200,1]]
 
     for dummy in dummies:
         path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
@@ -165,7 +167,7 @@ def run():
         for struct in instructions:
             instructString+=struct + "."
 
-        arduino1.request('GET', 'http://192.168.137.166/?instructions=!' + instructString + '!')
+        arduino1.request('GET', 'http://192.168.137.131/?instructions=!' + instructString + '!')
 
 
 if __name__ == "__main__":
