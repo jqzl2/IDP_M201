@@ -26,16 +26,17 @@ def goToPoint(robot , goal, path):
     return path
 
 def findPath(robot , goal, path):
+    print(robot, goal)
     if robot[2] != goal[2]:
         if robot[2] == 0:
-            transitionPoint = [235,5,1]
+            transitionPoint = [235,15,1]
         else:
-            transitionPoint = [5,234,0]
+            transitionPoint = [5,224,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
-    if robot[2] == 1 and robot[0] < robot[1]:
-        path = goToPoint(robot, [235,235,1], path)
-        path = goToPoint(robot, [goal[0],235,1], path)
+    # if robot[2] == 1 and robot[0] < robot[1]:
+    #     path = goToPoint(robot, [235,235,1], path)
+    #     path = goToPoint(robot, [goal[0],235,1], path)
 
     path = goToPoint(robot, goal, path)
 
@@ -133,7 +134,10 @@ def generateInstructions(robot , direction, goal):
 
     instruct[len(instruct) -1] = finalInstruct
 
-    return instruct , robot, direction % 4
+    robot = [15,15,0]
+    direction = 1
+
+    return instruct , robot, direction
 
 
 
@@ -157,14 +161,14 @@ def generateInstructions(robot , direction, goal):
 
 
 def dummySortFunct(x):
-    if x[0][0] > x[0][1]:
-        return x[0][1]
+    # if x[0][0] > x[0][1]:
+    #     return x[0][1]
     return x[0][0]
 
 def animate(i):
     dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
     goals = [[[90,50,0] , 0] , [[50,90,0] , 1] , [[212,212,1] , 2]]
-    robot = [20,20,0]
+    robot = [15,15,0]
 
     plt.gcf().clear()
 
@@ -179,24 +183,25 @@ def animate(i):
 
     for i in range(1):
         path = [[robot[0]],[robot[1]]]
-        path = findPath(robot, dummies[i], path)
-        path = findPath(robot, goals[dummies[i][1]], path)
+        path = findPath(robot, dummies[i][0], path)
+        
+        path = findPath(robot, goals[dummies[i][1]][0], path)
         plt.plot(path[0] , path[1])
 
     path = [[robot[0]],[robot[1]]]
-    path = findPath(robot, [[20,20,0] , 0], path)
+    path = findPath(robot, [15,15,0], path)
     plt.plot(path[0],path[1])
 
-    robot = [20,20,0]
+    robot = [15,15,0]
 
     path = [[robot[0]], [robot[1]]]
 
     for i in range(1):
-        path = findPath(robot, dummies[i], path)
-        path = findPath(robot, goals[dummies[i][1]], path)
+        path = findPath(robot, dummies[i][0], path)
+        path = findPath(robot, goals[dummies[i][1]][0], path)
         
 
-    path = findPath(robot , [[20,20,0], 0], path)
+    path = findPath(robot , [15,15,0], path)
 
     instructions = []
 
@@ -213,3 +218,5 @@ def animate(i):
     plt.xlim(0,240)
     plt.ylim(0,240)
     plt.gca().set_aspect("equal", "box")
+
+animate(1)

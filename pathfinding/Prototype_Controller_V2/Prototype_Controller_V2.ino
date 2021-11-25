@@ -666,12 +666,68 @@ void closeDoor() {
 }
 
 
-void blindDrive(int dist, int sign){
+int blindDrive(int dist, int sign){
   drive(255 * sign, 255 * sign);
+  int start = millis();
   while (distanceFront() * sign > dist * sign){
     delay(1);
   }
+  return millis() - start;
   drive(0,0);
+}
+
+void goToGoal(int mode){
+  turnOnSpot(-1);
+  int sign = 1;
+  if (distanceFront() < 5){
+    sign = -1;
+  }
+
+  blindDrive(5,sign);
+  turnOnSpot(1);
+
+  //should now be aligned with back right wall
+
+  if (mode == 1){
+    maintainDistance(1000,15);
+    drive(255,255);
+    delay(1000);
+    drive(0,0);
+
+    turnOnSpot(2);
+
+    openDoor();
+
+    drive(-255,-255);
+
+    delay(1000);
+
+    turnOnSpot(-2);
+
+    goToDistanceWrapper(5,15);
+    turnOnSpot(1);
+  }else{
+    goToDistanceWrapper(5,15);
+    turnOnSpot(1);
+
+    goToDistanceWrapper(70,5);
+
+    if (mode == 2){
+      goToDistanceWrapper(30,5);
+    }
+
+    turnOnSpot(1);
+
+    enterGoal(mode , 1);
+
+    drive(-255,-255);
+    delay(1000);
+
+    turnOnSpot(-1);
+  }
+
+  goToDistanceWrapper(5,15);
+  turnOnSpot(1);
 }
 
 //dummy collection logic
@@ -684,7 +740,7 @@ int collectDummy(int dummySide) {
 
     //get close to dummy
     //goToDistance(0, dummySide);
-    blindDrive(2,1);
+    int delta = blindDrive(2,1);
 
     //detect mode
     int dummyMode = DiffDummy();
@@ -715,6 +771,12 @@ int collectDummy(int dummySide) {
 
     //back to default mode handling
     collecting = false;
+
+    drive(-255,-255);
+    delay(delta + 350);
+    drive(0,0);
+
+    goToGoal(dummyMode);
 
     //return mode
     return dummyMode;
