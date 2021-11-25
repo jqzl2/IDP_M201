@@ -168,9 +168,9 @@ def run():
 
     #     for struct in instructions:
     #         instructString+=struct + "."
-    command ="2,100,000.3,100,000"
+    command ="0,004,015.1,001,000.0,004,015.1,001,000.0,004,015.1,001,000.0,004,025.1,001,000."
     arduino1 = urllib3.PoolManager()
-    response =  arduino1.request('GET', 'http://192.168.137.191/?instructions=!' + command + '!')
+    response =  arduino1.request('GET', 'http://192.168.137.228/?instructions=!' + command + '!')
     print(response.status)
     print(response.data)
 # robot = [20,20]
