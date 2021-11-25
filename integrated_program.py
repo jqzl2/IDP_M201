@@ -154,7 +154,7 @@ def run():
     # p = start_video(findDummies)
     # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
     # dummies = [dummy1, dummy2, dummy3]
-    # dummies.sort() # sorting not done yet
+
 
     dummies = [[50,200,1]]
 
