@@ -9,40 +9,68 @@ DepositDummyNum = 3
 ReturnToStartNum = 4
 
 def goToPoint(robot , goal, path):
+    '''
+    input:
+    robot = [x1, y1, 0/1]
+    goal = [x2, y2, 0/1]
+    path = [[x1], [y1]]
+
+    return:
+    path = [[x path],[y path]]
+    go to point directly by turning 90 degree
+    '''
+    # if y value doesn't match, break down
     if robot[1] != goal[1]:
         robot[1] = goal[1]
         path[0].append(robot[0])
         path[1].append(robot[1])
         return goToPoint(robot , goal , path)
 
+    # if x value doesn't match, repeat until match
     if robot[0] != goal[0]:
         robot[0] = goal[0]
         path[0].append(robot[0])
         path[1].append(robot[1])
         return goToPoint(robot , goal , path)
-    
-    robot[2] = goal[2]
 
+    robot[2] = goal[2]
     return path
 
 def findPath(robot , goal, path):
+    '''
+    input:
+    robot = [x1, y1, 0/1]
+    goal = [x2, y2, 0/1]
+    path = [[x1], [y1]]
+
+    return:
+    path = [[x path],[y path]]
+    go to point considering if transition at corner needed
+    '''
+    # if robot and goal not on same side
     if robot[2] != goal[2]:
         if robot[2] == 0:
-            transitionPoint = [235,5,1]
+            transitionPoint = [235,15,1]
         else:
-            transitionPoint = [5,234,0]
+            transitionPoint = [5,225,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
+    # left top quadrant
     if robot[2] == 1 and robot[0] < robot[1]:
-        path = goToPoint(robot, [235,235,1], path)
-        path = goToPoint(robot, [goal[0],235,1], path)
+        path = goToPoint(robot, [225,235,1], path)
+        #path = goToPoint(robot, [goal[0],235,1], path)
 
     path = goToPoint(robot, goal, path)
 
     return path
 
 def pathToInstructions(path, direction, instructions):
+    '''
+    path 
+    direction = direction of robot 0/1/2/3 (90 degree)
+    instructions = current instructions
 
+    '''
     toPrint = ""
 
     front = 0
@@ -61,8 +89,7 @@ def pathToInstructions(path, direction, instructions):
             front = path[0][1]
             side = 240 - path[1][1]
             goalDirect = 3
-
-        
+   
     else:
         if path[0][0] < 240 - path[1][0]:
             goalDirect = 2
@@ -94,6 +121,7 @@ def pathToInstructions(path, direction, instructions):
         instruct = instruct[0]
 
     return instruct
+
 def generateInstructions(robot , direction, goal):
     instruct = []
     dummy = True
@@ -101,7 +129,8 @@ def generateInstructions(robot , direction, goal):
 
     ##this is currently where the goal positions are stored
 
-    dummyGoals = [[24,24,0],[50,90,0],[90,50,0],[215,215,1]]
+    # [home, white, red, blue]
+    dummyGoals = [[24,24,0], [215,215,1], [50,90,0], [90,50,0]]
 
     if type(goal) == int:
         #this is a dummy goal
