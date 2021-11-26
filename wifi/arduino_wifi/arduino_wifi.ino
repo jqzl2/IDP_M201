@@ -1,15 +1,9 @@
 #include <Adafruit_MotorShield.h>
-
-#include <SharpIR.h>
-
+#include "SharpIR.h"
 #include <Servo.h>
-
 #include <math.h>
-
 #include <SPI.h>
-
 #include <WiFiNINA.h>
-
 #include <string.h>
 
 #define MaxPower 255
@@ -167,13 +161,13 @@ void printWifiStatus() {
     Serial.println(ip);
 }
 
-String wifiWrapper() {
+String wifiWrapper(int d) {
     WiFiClient client = server.available(); // listen for incoming clients
 
     while (!client) {
         client = server.available();
     }
-
+    
     if (client) { // if you get a client,
         String currentLine = ""; // make a String to hold incoming data from the client
         String request;
@@ -189,11 +183,11 @@ String wifiWrapper() {
                         // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
                         // and a content-type so the client knows what's coming, then a blank line:
                         client.println("HTTP/1.1 200 OK");
-                        client.println("Content-type:text/html");
+                        client.println("Content-type:text/plain");
                         client.println();
 
                         // the content of the HTTP response follows the header:
-                        client.print("Arduino has received PC request");
+                        client.print("Arduino has received PC commands");
 
                         // The HTTP response ends with another blank line:
                         client.println();
@@ -213,7 +207,7 @@ String wifiWrapper() {
         Serial.println("client disconnected");
         return request;
     }
-}
+ }
 
 int dummyMode() {
     qsd1 = analogRead(qsdPin1);
@@ -702,7 +696,7 @@ int collectDummy(int dummySide) {
 
 void loop() {
     String commands;
-    String request = wifiWrapper();
+    String request = wifiWrapper(3);
     char * crequest = new char[request.length() + 1];
     strcpy(crequest, request.c_str());
     char * data = strtok(crequest, "!");

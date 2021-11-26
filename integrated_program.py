@@ -168,19 +168,20 @@ def run():
 
     #     for struct in instructions:
     #         instructString+=struct + "."
-    command ="0,004,015.1,001,000.0,004,015.1,001,000.0,004,015.1,001,000.0,004,025.1,001,000."
-    arduino1 = urllib3.PoolManager()
-    response =  arduino1.request('GET', 'http://192.168.137.228/?instructions=!' + command + '!')
-    print(response.status)
-    print(response.data)
-# robot = [20,20]
-# direction = 1
+    command ="0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,025.1,000,-01."
+    commander = urllib3.PoolManager()
+    send_commands =  commander.request('GET', 'http://192.168.137.227/?instructions=!' + command + '!')
+    # print(send_commands.status)
+    # print(send_commands.data) 
 
-# p = start_video(findDummies)
-# dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-# print(dummy1, dummy2, dummy3)
-# path = findPath(robot, goal =  [[dummy1[0], dummy1[1], 0], 0], path = [[robot[0]],[robot[1]]])
-# instructions, robot, direction = generateInstructions(robot, direction, [100,220,1])
+    # while True:
+    #     requester = urllib3.PoolManager()
+    #     request_dummy_mode = requester.request('GET', 'http://192.168.137.228/')
+    #     if request_dummy_mode.data:
+    #         print(request_dummy_mode.data)
+    #         break
+    #     else:
+    #         pass
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
