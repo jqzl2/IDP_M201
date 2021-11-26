@@ -1,6 +1,6 @@
 #include <Adafruit_MotorShield.h>
 
-#include <SharpIR.h>
+#include "SharpIR.h"
 
 #include <Servo.h>
 

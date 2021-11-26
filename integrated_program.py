@@ -167,8 +167,27 @@ def run():
         for struct in instructions:
             instructString+=struct + "."
 
+<<<<<<< HEAD
         arduino1.request('GET', 'http://192.168.137.131/?instructions=!' + instructString + '!')
 
+=======
+    #     for struct in instructions:
+    #         instructString+=struct + "."
+    command ="0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,025.1,000,-01."
+    commander = urllib3.PoolManager()
+    send_commands =  commander.request('GET', 'http://192.168.137.227/?instructions=!' + command + '!')
+    # print(send_commands.status)
+    # print(send_commands.data) 
+
+    # while True:
+    #     requester = urllib3.PoolManager()
+    #     request_dummy_mode = requester.request('GET', 'http://192.168.137.228/')
+    #     if request_dummy_mode.data:
+    #         print(request_dummy_mode.data)
+    #         break
+    #     else:
+    #         pass
+>>>>>>> a4836152ca6975f81ec78db9e06b0a636de401eb
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
