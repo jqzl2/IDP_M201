@@ -170,7 +170,7 @@ def run():
     #         instructString+=struct + "."
     command ="0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,025.1,000,-01."
     commander = urllib3.PoolManager()
-    send_commands =  commander.request('GET', 'http://192.168.137.227/?instructions=!' + command + '!')
+    send_commands =  commander.request('GET', 'http://192.168.137.227/?instructions=!' + command + '!', timeout = 100)
     # print(send_commands.status)
     # print(send_commands.data) 
 
