@@ -128,7 +128,7 @@ def avg_dummy_positions(p):
     m = np.matrix([dummy_xs , dummy_ys])
     print(m)
     print("")
-    clusterIds = dbscan(m, 15, 0)
+    clusterIds = dbscan(m, 5, 2)
 
     metaDummies = []
 
@@ -137,8 +137,8 @@ def avg_dummy_positions(p):
             while len(metaDummies) < clusterIds[i]:
                 metaDummies.append([[],[]])
 
-            metaDummies[clusterIds[i]-1][0].append(240 - (dummy_xs[i] * ( 240 / (((201-878)**2 + (735-705)**2)**0.5))))
-            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i] * (240 / (((201-178)**2 + (735-76)**2)**0.5)))
+            metaDummies[clusterIds[i]-1][0].append(dummy_xs[i])
+            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i])
 
     metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
 
@@ -151,21 +151,26 @@ def avg_dummy_positions(p):
 def run():
     robot = [20, 10, 0]
     direction = 1
-    # p = start_video(findDummies)
-    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    # dummies = [dummy1, dummy2, dummy3]
-
+    #p = start_video(findDummies)
+    #dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    #dummies = [dummy1, dummy2, dummy3]
+    #dummies.sort() # sorting not done yet
 
     dummies = [[50,200,1]]
 
+    for dummy in dummies:
+        path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
+        instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
+        arduino1 = urllib3.PoolManager()
+        instructString = ""
 
-    # for dummy in dummies:
-    #     path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
-    #     robot = [20,10,0]
-    #     instructions, robot, direction = generateInstructions(robot, direction, [220,200,1])
-    #     arduino1 = urllib3.PoolManager()
-    #     instructString =''
+        for struct in instructions:
+            instructString+=struct + "."
 
+<<<<<<< HEAD
+        arduino1.request('GET', 'http://192.168.137.131/?instructions=!' + instructString + '!')
+
+=======
     #     for struct in instructions:
     #         instructString+=struct + "."
     command ="0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,015.1,000,-01.0,005,025.1,000,-01."
@@ -182,6 +187,7 @@ def run():
     #         break
     #     else:
     #         pass
+>>>>>>> a4836152ca6975f81ec78db9e06b0a636de401eb
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")

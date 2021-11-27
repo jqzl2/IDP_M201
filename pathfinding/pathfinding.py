@@ -9,41 +9,68 @@ DepositDummyNum = 3
 ReturnToStartNum = 4
 
 def goToPoint(robot , goal, path):
+    '''
+    input:
+    robot = [x1, y1, 0/1]
+    goal = [x2, y2, 0/1]
+    path = [[x1], [y1]]
+
+    return:
+    path = [[x path],[y path]]
+    go to point directly by turning 90 degree
+    '''
+    # if y value doesn't match, break down
     if robot[1] != goal[1]:
         robot[1] = goal[1]
         path[0].append(robot[0])
         path[1].append(robot[1])
         return goToPoint(robot , goal , path)
 
+    # if x value doesn't match, repeat until match
     if robot[0] != goal[0]:
         robot[0] = goal[0]
         path[0].append(robot[0])
         path[1].append(robot[1])
         return goToPoint(robot , goal , path)
-    
-    robot[2] = goal[2]
 
+    robot[2] = goal[2]
     return path
 
 def findPath(robot , goal, path):
-    print(robot, goal)
+    '''
+    input:
+    robot = [x1, y1, 0/1]
+    goal = [x2, y2, 0/1]
+    path = [[x1], [y1]]
+
+    return:
+    path = [[x path],[y path]]
+    go to point considering if transition at corner needed
+    '''
+    # if robot and goal not on same side
     if robot[2] != goal[2]:
         if robot[2] == 0:
             transitionPoint = [235,15,1]
         else:
-            transitionPoint = [5,224,0]
+            transitionPoint = [5,225,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
-    # if robot[2] == 1 and robot[0] < robot[1]:
-    #     path = goToPoint(robot, [235,235,1], path)
-    #     path = goToPoint(robot, [goal[0],235,1], path)
+    # left top quadrant
+    if robot[2] == 1 and robot[0] < robot[1]:
+        path = goToPoint(robot, [225,235,1], path)
+        #path = goToPoint(robot, [goal[0],235,1], path)
 
     path = goToPoint(robot, goal, path)
 
     return path
 
 def pathToInstructions(path, direction, instructions):
+    '''
+    path 
+    direction = direction of robot 0/1/2/3 (90 degree)
+    instructions = current instructions
 
+    '''
     toPrint = ""
 
     front = 0
@@ -62,8 +89,7 @@ def pathToInstructions(path, direction, instructions):
             front = path[0][1]
             side = 240 - path[1][1]
             goalDirect = 3
-
-        
+   
     else:
         if path[0][0] < 240 - path[1][0]:
             goalDirect = 2
@@ -95,6 +121,7 @@ def pathToInstructions(path, direction, instructions):
         instruct = instruct[0]
 
     return instruct
+
 def generateInstructions(robot , direction, goal):
     instruct = []
     dummy = True
@@ -102,7 +129,8 @@ def generateInstructions(robot , direction, goal):
 
     ##this is currently where the goal positions are stored
 
-    dummyGoals = [[24,24,0],[50,90,0],[90,50,0],[215,215,1]]
+    # [home, white, red, blue]
+    dummyGoals = [[24,24,0], [215,215,1], [50,90,0], [90,50,0]]
 
     if type(goal) == int:
         #this is a dummy goal
@@ -113,7 +141,6 @@ def generateInstructions(robot , direction, goal):
         dummy = False
 
     path = findPath(robot , goal, [[robot[0]],[robot[1]]])
-    print(path)
     instruct = pathToInstructions(path, direction, instruct)
 
 
@@ -134,10 +161,7 @@ def generateInstructions(robot , direction, goal):
 
     instruct[len(instruct) -1] = finalInstruct
 
-    robot = [15,15,0]
-    direction = 1
-
-    return instruct , robot, direction
+    return instruct , robot, direction % 4
 
 
 
@@ -161,14 +185,14 @@ def generateInstructions(robot , direction, goal):
 
 
 def dummySortFunct(x):
-    # if x[0][0] > x[0][1]:
-    #     return x[0][1]
+    if x[0][0] > x[0][1]:
+        return x[0][1]
     return x[0][0]
 
 def animate(i):
     dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
     goals = [[[90,50,0] , 0] , [[50,90,0] , 1] , [[212,212,1] , 2]]
-    robot = [15,15,0]
+    robot = [20,20,0]
 
     plt.gcf().clear()
 
@@ -183,25 +207,24 @@ def animate(i):
 
     for i in range(1):
         path = [[robot[0]],[robot[1]]]
-        path = findPath(robot, dummies[i][0], path)
-        
-        path = findPath(robot, goals[dummies[i][1]][0], path)
+        path = findPath(robot, dummies[i], path)
+        path = findPath(robot, goals[dummies[i][1]], path)
         plt.plot(path[0] , path[1])
 
     path = [[robot[0]],[robot[1]]]
-    path = findPath(robot, [15,15,0], path)
+    path = findPath(robot, [[20,20,0] , 0], path)
     plt.plot(path[0],path[1])
 
-    robot = [15,15,0]
+    robot = [20,20,0]
 
     path = [[robot[0]], [robot[1]]]
 
     for i in range(1):
-        path = findPath(robot, dummies[i][0], path)
-        path = findPath(robot, goals[dummies[i][1]][0], path)
+        path = findPath(robot, dummies[i], path)
+        path = findPath(robot, goals[dummies[i][1]], path)
         
 
-    path = findPath(robot , [15,15,0], path)
+    path = findPath(robot , [[20,20,0], 0], path)
 
     instructions = []
 
@@ -218,5 +241,3 @@ def animate(i):
     plt.xlim(0,240)
     plt.ylim(0,240)
     plt.gca().set_aspect("equal", "box")
-
-animate(1)
