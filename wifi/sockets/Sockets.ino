@@ -50,7 +50,7 @@ void loop()
       }
       char c = client.read();   // read a byte
       Serial.print(c);          // then print it out the serial monitor
-      if (c == "$"){
+      if (c == '$'){
         break;}
       }
     }

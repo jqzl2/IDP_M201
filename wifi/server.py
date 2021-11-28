@@ -1,4 +1,5 @@
 import socket
+import time
 
 def path_finder_server():
     HOST = '0.0.0.0'
@@ -14,8 +15,10 @@ def path_finder_server():
     # use new socket object conn to communicate with client
     print('Connected by ', address)
 
-    dummy_mode = conn.recv(32)                                # conn server receives data of buffer size 32 bytes, 
-    commands = ''
+    dummy_mode = conn.recv(32)                                # conn server receives data of buffer size 32 bytes,
+    print(type(dummy_mode)) 
+    commands = 'hello$'
     conn.send(commands.encode())
 
-    #conn.close()                                          # close socket object conn
+    conn.close()                                          # close socket object conn
+
