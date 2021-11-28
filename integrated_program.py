@@ -80,50 +80,28 @@ def dbscan(m, eps, min_points):
                 cluster_id = cluster_id + 1
     return classifications
 
-def test_dbscan():
-    m = np.matrix('1 1.2 0.8 3.7 3.9 3.6 10; 1.1 0.8 1 4 3.9 4.1 10')
-    eps = 0.5
-    min_points = 2
-    assert dbscan(m, eps, min_points) == [1, 1, 1, 2, 2, 2, None]
-
 def avg_dummy_positions(p):
-    dummy1_xs = []
-    dummy1_ys = []
-    dummy2_xs = []
-    dummy2_ys = []
-    dummy3_xs = []
-    dummy3_ys = []
 
     dummy_xs = []
     dummy_ys = []
 
     for frame in p:
-        dummy1 = frame[0]
-        dummy2 = frame[1]
-        dummy1_xs.append(dummy1[0])
-        dummy1_ys.append(dummy1[1])
-        dummy2_xs.append(dummy2[0])
-        dummy2_ys.append(dummy2[1])
+        # dummy1 = frame[0]
+        # dummy2 = frame[1]
 
-        dummy_xs.append(dummy1[0])
-        dummy_ys.append(dummy1[1])
-        dummy_xs.append(dummy2[0])
-        dummy_ys.append(dummy2[1])
-        
-        if len(frame) == 3:
-            dummy3 = frame[2]
-            dummy3_xs.append(dummy3[0])
-            dummy3_ys.append(dummy3[1])
+        # dummy_xs.append(dummy1[0])
+        # dummy_ys.append(dummy1[1])
+        # dummy_xs.append(dummy2[0])
+        # dummy_ys.append(dummy2[1])
 
-            dummy_xs.append(dummy3[0])
-            dummy_ys.append(dummy3[1])
+        for i in range(len(frame)):
+            dummy_xs.append(frame[i][0])
+            dummy_ys.append(frame[i][1])
         
-    dummy1_xs = np.array(dummy1_xs)
-    dummy1_ys = np.array(dummy1_ys)
-    dummy2_xs = np.array(dummy2_xs)
-    dummy2_ys = np.array(dummy2_ys)
-    dummy3_xs = np.array(dummy3_xs)
-    dummy3_ys = np.array(dummy3_ys)
+        # if len(frame) == 3:
+        #     dummy3 = frame[2]
+        #     dummy_xs.append(dummy3[0])
+        #     dummy_ys.append(dummy3[1])
 
     m = np.matrix([dummy_xs , dummy_ys])
     print(m)
@@ -149,14 +127,13 @@ def avg_dummy_positions(p):
     return dummy1, dummy2, dummy3
 
 def run():
-    robot = [20, 10, 0]
-    direction = 1
+    # robot = [20, 10, 0]
+    # direction = 1
     # p = start_video(findDummies)
     # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
     # dummies = [dummy1, dummy2, dummy3]
 
-
-    dummies = [[50,200,1]]
+    # dummies = [[50,200,1]]
 
 
     # for dummy in dummies:
@@ -168,9 +145,9 @@ def run():
 
     #     for struct in instructions:
     #         instructString+=struct + "."
-    command ="2,100,000.3,100,000"
+    command ="0,005,015"
     arduino1 = urllib3.PoolManager()
-    response =  arduino1.request('GET', 'http://192.168.137.191/?instructions=!' + command + '!')
+    response =  arduino1.request('GET', 'http://192.168.137.91/?instructions=!' + command + '!')
     print(response.status)
     print(response.data)
 # robot = [20,20]

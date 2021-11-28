@@ -196,7 +196,7 @@ def findDummies(img):
 	
 	centres = []
 
-	for i in range(3):
+	for i in range(6):
 	 	M = cv2.moments(contours[i])
 	 	if M['m00'] != 0.0:
 			 x_centre = int(M['m10']/M['m00'])

@@ -29,24 +29,24 @@
 //#define RTurn 862
 #define RTurn 1000
 
-#define IRPinS A0
-#define IRPinF A1
+#define IRPinS A2
+#define IRPinF A3
 
-#define qsdPin1 A2
-#define qsdPin2 A3
+#define qsdPin1 A0
+#define qsdPin2 A1
 
 #define redPin 2
 #define greenPin 3
 
-#define echoPinFront 4 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPinFront 5 //attach pin D3 Arduino to pin Trig of HC-SR04
+#define echoPinSide 8 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPinSide 11 //attach pin D3 Arduino to pin Trig of HC-SR04
 
-#define tsopPin 6
-#define motorPin 7
-#define lineSensorPin 8
+#define tsopPin 5
+#define motorPin 4
+#define lineSensorPin 7
 
-#define echoPinSide 11
-#define trigPinSide 12
+#define echoPinFront 13
+#define trigPinFront 12
 
 char ssid[] = "M201"; // your network SSID (name)
 char pass[] = "WacManIDP"; // your network password (use for WPA, or use as key for WEP)
@@ -120,6 +120,9 @@ void setup() {
 
     openDoor();
 
+    while(1){
+      Serial.println(DiffDummy());
+    }
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
         Serial.println("Communication with WiFi module failed!");
@@ -395,10 +398,18 @@ int distanceFront() {
 
 //returns the distance from the side of the vehical
 int distanceSide() {
-    Serial.println("hello");
     //get the two distances
     IRDistance = sideIR.distance();
     USDistance = readUltraSonic(trigPinSide, echoPinSide);
+
+Serial.println("");
+Serial.println("");
+Serial.println("");
+    Serial.println(IRDistance);
+    Serial.println(USDistance);
+    Serial.println("");
+    Serial.println("");
+    Serial.println("");
 
     //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
     float Y3 = Y1 - USDistance;
@@ -610,10 +621,10 @@ void adjustDrive(int sideGoal, int sign) {
     //debugging prints
     Serial.println(distanceFront());
     Serial.println(distanceSide());
-    Serial.println(rightSpeed);
-    Serial.println(leftSpeed);
-    Serial.println(mult);
-    Serial.println("");
+//    Serial.println(rightSpeed);
+//    Serial.println(leftSpeed);
+//    Serial.println(mult);
+//    Serial.println("");
 
 }
 
