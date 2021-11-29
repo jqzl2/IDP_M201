@@ -159,9 +159,9 @@ def ContSortFunct(contour):
 	area = cv2.contourArea(contour)
 	M = cv2.moments(contour)
 	if M['m00'] != 0.0:
-		x_centre = int(M['m10']/M['m00'])
-		y_centre = int(M['m01']/M['m00'])
-		if x_centre > y_centre or (x_centre < 75 and y_centre > 575):
+		x_center = int(M['m10'] / M['m00'])
+		y_center = int(M['m01'] / M['m00'])
+		if x_center > y_center or (x_center < 75 and y_center > 575):
 			return Infinity
 		return area
 	return Infinity
