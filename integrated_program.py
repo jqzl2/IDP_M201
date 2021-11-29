@@ -135,7 +135,6 @@ def run():
     dummies = [dummy1, dummy2, dummy3]
 
     print(dummies)
-    return 1
 
     dummies = [[50,200,1]]
 
