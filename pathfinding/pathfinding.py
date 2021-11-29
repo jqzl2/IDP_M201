@@ -1,4 +1,5 @@
 import random
+import math
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
@@ -7,6 +8,9 @@ TurnNum = 1
 CollectDummyNum = 2
 DepositDummyNum = 3
 ReturnToStartNum = 4
+DummyAvoidanceNum = 5
+
+robotWidth = 15
 
 def goToPoint(robot , goal, path):
     '''
@@ -163,31 +167,123 @@ def generateInstructions(robot , direction, goal):
 
     return instruct , robot, direction % 4
 
-
-
-# instruct , robot, direction = generateInstructions([10,10,0] , 1 , [100,220,1])
-# print(instruct)
-# instruct , robot, direction = generateInstructions(robot , direction , 2)
-# print(instruct)
-
-# instruct , robot, direction = generateInstructions(robot , direction , [150,175,1])
-# print(instruct)
-# instruct , robot, direction = generateInstructions(robot , direction , 3)
-# print(instruct)
-
-# instruct , robot, direction = generateInstructions(robot , direction , [200,100,1])
-# print(instruct)
-# instruct , robot, direction = generateInstructions(robot , direction , 1)
-# print(instruct)
-
-# instruct , robot, direction = generateInstructions(robot , direction , 0)
-# print(instruct)
-
-
 def dummySortFunct(x):
     if x[0][0] > x[0][1]:
         return x[0][1]
     return x[0][0]
+
+
+def sortDummies(dummies):
+    print(dummies)
+    blocking = []
+    dummyNo = len(dummies)
+    for i in range(dummyNo):
+        blocking.append([])
+    blocked = False
+    for i in range(dummyNo):
+        count = 0
+        for j in range(dummyNo):
+            if i != j:
+                blocked = False
+                if dummies[j][0] < dummies[i][0]:
+                    if abs(dummies[j][1] - dummies[i][1]) < robotWidth:
+                        blocked = True
+
+                if dummies[j][1] < dummies[i][1]:
+                    if abs(dummies[j][0] - dummies[i][0]) < robotWidth:
+                        blocked = True
+
+                if dummies[j][0] > 240 - robotWidth:
+                    if dummies[j][1] < dummies[i][1]:
+                        blocked = True
+
+                if dummies[j][1] > 250 - robotWidth:
+                    if dummies[j][0] < dummies[i][0]:
+                        blocked = True
+
+                if blocked:
+                    count += 1
+        blocking[count].append(dummies[i])
+
+    while(len(blocking[dummyNo - 1]) == 0):
+        blocking.insert(0, [])
+
+
+    if len(blocking[dummyNo - 1]) != 0:
+        #1 blocking 2
+        if len(blocking[dummyNo - 1]) == 1:
+            ret = blocking[dummyNo - 1][0]
+
+        #2 blokcing 2
+        elif len(blocking[dummyNo - 1]) == 2:
+            if blocking[dummyNo -1][0] > blocking[dummyNo - 1][1]:
+                ret = blocking[dummyNo - 1][1]
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][0])
+            else:
+                ret = blocking[dummyNo - 1][0]
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][1])
+
+        else:
+            #more please send help
+            helperList = []
+            herlperVar = 1000
+            for i in range(len(blocking[dummyNo - 1])):
+                for j in range(dummyNo):
+                    if blocking[dummyNo - 1][i] != dummies[j]:
+                        herlperVar = min(herlperVar , (blocking[i][0] - dummies[i][0])**2 + (blocking[i][1] - dummies[i][1])**2)
+
+                helperList.append(herlperVar)
+            
+            herlperVar = 0
+            for i in range(len(blocking[dummyNo - 1])):
+                if helperList[i] > herlperVar:
+                    herlperVar = helperList[i]
+                    count = i
+            
+            ret = blocking[dummyNo - 1][i]
+            if i > 0:
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][:i])
+            
+            if i < len(blocking[dummyNo - 1] - 1):
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][i+1:])
+
+        rec = []
+
+        for i in range(dummyNo - 1):
+            for j in range(len(blocking[i])):
+                rec.append(blocking[i][j])
+
+        if len(rec) == 0:
+            print(ret)
+            print("f")
+            return [ret]
+
+        print(ret)
+
+        ret = [ret]
+
+        helperList =  sortDummies(rec)
+
+        for i in range(len(helperList)):
+            ret.append(helperList[i])
+
+        return ret
+
+    #blocking 2 contains something blocking 2 dummies etc
+
+    #if 0 blocking 2 - fall through
+    #if 1 blocking 2 pick up 1
+    #if 2 blocking 2 pick up one that occurs latest in the path, go around other
+    #if 3 blocking 2 not possible because 3 dummies are right next to each other
+
+    #if 0 blocking 1 - fall through
+
+    #if 3 blocking 1 - sort by distance from wall
+    #if 2 blocking 1 - recurse
+    #if 1 blocking 1 - collect
+
+    #if blocking 0 sort and collect
+
 
 def animate(i):
     dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
@@ -232,12 +328,16 @@ def animate(i):
 
     print(instructions)
 
-
-
-
-
     plt.plot([15 , 225],[225,15])
 
     plt.xlim(0,240)
     plt.ylim(0,240)
     plt.gca().set_aspect("equal", "box")
+
+
+
+print(sortDummies([[150 , 100],[100,200],[100,100]]))
+# step 1 sort dummies
+#sort dummies into buckets, in terms of how many dummies they block
+#sort bucket in terms of distance from walls
+#if collisions occur go round one with lowest y
