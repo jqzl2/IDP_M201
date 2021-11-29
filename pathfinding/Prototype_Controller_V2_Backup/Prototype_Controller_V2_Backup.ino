@@ -730,6 +730,7 @@ int collectDummy(int dummySide) {
 
 void loop() {
   WiFiClient client = set_up_server();
+  while(true){
   String commands;
   String request = send_mode_receive_path(client, 3);
   digitalWrite(redPin, HIGH);
@@ -818,5 +819,5 @@ void loop() {
       i++;
     }
   }
-
+  }
 }
