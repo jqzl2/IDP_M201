@@ -6,6 +6,12 @@
 
 #include <math.h>
 
+#include <SPI.h>
+
+#include <WiFiNINA.h>
+
+#include <string.h>
+
 #define MaxPower 255
 #define USOffset 5
 #define IROffset 1
@@ -23,8 +29,8 @@
 //#define RTurn 862
 #define RTurn 1000
 
-#define IRPinS A2
-#define IRPinF A3
+#define IRPinS A3
+#define IRPinF A4
 
 #define qsdPin1 A0
 #define qsdPin2 A1
@@ -32,15 +38,23 @@
 #define redPin 2
 #define greenPin 3
 
-#define echoPinSide 8 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPinSide 11 //attach pin D3 Arduino to pin Trig of HC-SR04
+#define echoPinFront 13 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPinFront 12 //attach pin D3 Arduino to pin Trig of HC-SR04
 
 #define tsopPin 5
 #define motorPin 4
 #define lineSensorPin 7
 
-#define echoPinFront 13
-#define trigPinFront 12
+#define echoPinSide 8
+#define trigPinSide 11
+
+char ssid[] = "M201"; // your network SSID (name)
+char pass[] = "WacManIDP"; // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0; // your network key index number (needed only for WEP)
+
+int status = WL_IDLE_STATUS;
+WiFiServer server(80);
+String readString;
 
 //pins 8 is free
 //analog 4 is free
@@ -106,10 +120,6 @@ void setup() {
 
     openDoor();
 
-<<<<<<< HEAD
-    while(1){
-      Serial.println(DiffDummy());
-    }
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
         Serial.println("Communication with WiFi module failed!");
@@ -208,8 +218,6 @@ String wifiWrapper() {
         Serial.println("client disconnected");
         return request;
     }
-=======
->>>>>>> 1b9b8cea5245bbf055e2082b43c27c1ed06578f8
 }
 
 int dummyMode() {
@@ -377,7 +385,7 @@ int distanceFront() {
     //if the robot is moving a dummy or
     //if the robot is at the limits of the US sensor, and is not collecting
     if (carrying or(fDist > 70 and!collecting)) {
-      //just use the IR sensor
+        //just use the IR sensor
         return fDist;
     }
 
@@ -387,18 +395,10 @@ int distanceFront() {
 
 //returns the distance from the side of the vehical
 int distanceSide() {
+    Serial.println("hello");
     //get the two distances
     IRDistance = sideIR.distance();
     USDistance = readUltraSonic(trigPinSide, echoPinSide);
-
-Serial.println("");
-Serial.println("");
-Serial.println("");
-    Serial.println(IRDistance);
-    Serial.println(USDistance);
-    Serial.println("");
-    Serial.println("");
-    Serial.println("");
 
     //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
     float Y3 = Y1 - USDistance;
@@ -415,6 +415,9 @@ Serial.println("");
 
     float X5 = X3 + (C1 * t);
     float Y5 = Y3 + (C2 * t);
+
+    Serial.println(pow((X5 * X5) + (Y5 * Y5), 0.5) + 10);
+    delay(100);
 
     return pow((X5 * X5) + (Y5 * Y5), 0.5) + 10;
 }
@@ -441,6 +444,12 @@ float angleSide() {
     float X5 = X3 + (C1 * t);
     float Y5 = Y3 + (C2 * t);
 
+    if (X5 < 0) {
+        return 1.0;
+    }
+
+    return -1.0;
+
     return atan(X5 / Y5);
 }
 
@@ -458,27 +467,23 @@ void enterGoal(int mode, int sideGoal) {
     float mult;
     float dt;
 
-    int distnaces[4] = {
-        24,
-        50,
-        90,
-        24
-    };
-
     dt = 10 * 3.14 * 40 / 60;
 
     switch (mode) {
     case 0:
-    case 3:
-        dt *= 24;
-        break;
-
     case 1:
-        dt *= 50;
+        dt *= 24;
+        sideGoal = 24;
         break;
 
     case 2:
+        dt *= 50;
+        sideGoal = 90;
+        break;
+
+    case 3:
         dt *= 90;
+        sideGoal = 50;
         break;
     }
 
@@ -490,10 +495,15 @@ void enterGoal(int mode, int sideGoal) {
         adjustDrive(sideGoal, 1);
     }
 
+    drive(255, 255);
+    delay(1000);
+    openDoor();
+    drive(-255, -255);
+    delay(1000);
+
     //make sure wheels always end neutral
     drive(0, 0);
 }
-
 
 // this is a wrapper to deal with the carrying logic
 // the robot does each goTo multiple times to account for bad sensor reads
@@ -575,6 +585,7 @@ void adjustDrive(int sideGoal, int sign) {
 
     //mult is the difference between the side goal and value
     mult = (float) distanceSide() / (float) sideGoal;
+    Serial.println(mult);
     mult = 1 - mult;
 
     //feedback factors for fine tuning if required
@@ -599,10 +610,10 @@ void adjustDrive(int sideGoal, int sign) {
     //debugging prints
     Serial.println(distanceFront());
     Serial.println(distanceSide());
-//    Serial.println(rightSpeed);
-//    Serial.println(leftSpeed);
-//    Serial.println(mult);
-//    Serial.println("");
+    Serial.println(rightSpeed);
+    Serial.println(leftSpeed);
+    Serial.println(mult);
+    Serial.println("");
 
 }
 
@@ -632,7 +643,6 @@ void turnOnSpot(int n) {
     //rturn is calcualted assuming max speed at all times
     delay((int)(abs(n) * RTurn));
 
-    
     //this is used to ensure that the robot is close to straight
     //not neccessary but makes robot run faster in the end
     while (angleSide() < 0) {
@@ -655,21 +665,86 @@ void closeDoor() {
     carrying = true;
 }
 
+
+int blindDrive(int dist, int sign){
+  drive(255 * sign, 255 * sign);
+  int start = millis();
+  while (distanceFront() * sign > dist * sign){
+    delay(1);
+  }
+  return millis() - start;
+  drive(0,0);
+}
+
+void goToGoal(int mode){
+  turnOnSpot(-1);
+  int sign = 1;
+  if (distanceFront() < 5){
+    sign = -1;
+  }
+
+  blindDrive(5,sign);
+  turnOnSpot(1);
+
+  //should now be aligned with back right wall
+
+  if (mode == 1){
+    maintainDistance(1000,15);
+    drive(255,255);
+    delay(1000);
+    drive(0,0);
+
+    turnOnSpot(2);
+
+    openDoor();
+
+    drive(-255,-255);
+
+    delay(1000);
+
+    turnOnSpot(-2);
+
+    goToDistanceWrapper(5,15);
+    turnOnSpot(1);
+  }else{
+    goToDistanceWrapper(5,15);
+    turnOnSpot(1);
+
+    goToDistanceWrapper(70,5);
+
+    if (mode == 2){
+      goToDistanceWrapper(30,5);
+    }
+
+    turnOnSpot(1);
+
+    enterGoal(mode , 1);
+
+    drive(-255,-255);
+    delay(1000);
+
+    turnOnSpot(-1);
+  }
+
+  goToDistanceWrapper(5,15);
+  turnOnSpot(1);
+}
+
 //dummy collection logic
 int collectDummy(int dummySide) {
-  //special mode used to force the robot to use the US sensor
+    //special mode used to force the robot to use the US sensor
     collecting = true;
 
     //ensures that the doors are open
     openDoor();
-    
 
     //get close to dummy
-    goToDistance(0, dummySide);
+    //goToDistance(0, dummySide);
+    int delta = blindDrive(2,1);
 
     //detect mode
     int dummyMode = DiffDummy();
-    
+
     //light up correct LED's
     if (dummyMode != 3) {
         digitalWrite(redPin, HIGH);
@@ -681,13 +756,13 @@ int collectDummy(int dummySide) {
     } else {
         digitalWrite(greenPin, LOW);
     }
-    
+
     //wait for at least 5 seconds
     delay(5555);
 
     //get closer to the dummy
     drive(255, 255);
-    delay(238);
+    delay(350);
     drive(0, 0);
 
     //close doors
@@ -697,30 +772,103 @@ int collectDummy(int dummySide) {
     //back to default mode handling
     collecting = false;
 
+    drive(-255,-255);
+    delay(delta + 350);
+    drive(0,0);
+
+    goToGoal(dummyMode);
+
     //return mode
     return dummyMode;
 }
 
 void loop() {
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  closeDoor();
-    //  goToDistanceWrapper(10,15);
-    //  turnOnSpot(1);
-    //  goToDistanceWrapper(70,15);
-    //  turnOnSpot(1);
-    //  enterGoal(1,80);
+    String commands;
+    String request = wifiWrapper();
+    char * crequest = new char[request.length() + 1];
+    strcpy(crequest, request.c_str());
+    char * data = strtok(crequest, "!");
 
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-    int mode = collectDummy(15);
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-    goToDistanceWrapper(70, 15);
-    turnOnSpot(1);
-    enterGoal(1, 80);
+    int i = 0;
+    while (data != 0 && i < 4) {
+        i += 1;
+        //Serial.println(data);
+        data = strtok(NULL, "!");
+        if (i == 1) {
+            commands = data;
+            break;
+        }
+    }
+    delete[] crequest;
+    Serial.println(commands);
 
-    delay(100000);
+    int count = 0;
+    char * ccommands = new char[commands.length() + 1];
+    //strcpy(ccommands, commands.c_str());
+
+    commands.toCharArray(ccommands, commands.length());
+
+    char * command = strtok(ccommands, ".");
+
+    count = 0;
+
+    while (command != 0) {
+        count += 1;
+
+        String parsingArray = strtok(command, ",");
+
+        int operation = parsingArray.toInt(); // turn/goto/dummymode
+        parsingArray = strtok(0, ",");
+
+        int input1 = parsingArray.toInt(); //
+
+        parsingArray = strtok(0, ",");
+        int input2 = parsingArray.toInt(); // 
+        
+        switch(operation){
+          case 0:
+            goToDistanceWrapper(input1,input2);
+          //go to
+            break;
+
+          case 1:
+            turnOnSpot(input1);
+            //turn on spot
+            break;
+
+          case 2:
+
+          collectDummy(input1);
+          
+            //collect dummy
+            break;
+
+           case 3:
+           enterGoal(input1,input2);
+           //deposit dummy
+            break;
+
+           case 4:
+           enterGoal(0,0);
+           //return to start needs tsome more logic made
+
+           break;
+        }
+
+        Serial.println(operation);
+        Serial.println(input1);
+        Serial.println(input2);
+
+        commands.toCharArray(ccommands, commands.length());
+
+        command = strtok(ccommands, ".");
+
+        i = 0;
+
+        while (i < count) {
+            command = strtok(0, ".");
+            i++;
+        }
+    }
+
 }
