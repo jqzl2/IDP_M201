@@ -152,7 +152,7 @@ String send_mode_receive_path(WiFiClient client, int mode) {     // send dummy m
     if (client.available()) {
 
       char c = client.read();   // read a byte
-      client.print(c);          // then print it out the serial monitor
+      //client.print(c);          // then print it out the serial monitor
       commands += c;
       if (c == '$') {
         return commands;                  // end of command signposted by '$', so stop trying to read incoming data from PC
@@ -801,6 +801,23 @@ void loop() {
         enterGoal(0, 0);
         //return to start needs tsome more logic made
 
+        break;
+
+      case 5:
+        drive(255,255);
+        delay(input1 * 50);
+        drive(0, 0);
+        break;
+
+      case 6:
+        maintainDistance(input1 * 50, input2);
+        break;
+
+      case 7:
+        openDoor();
+        delay(5000);
+        closeDoor();
+        delay(5000);
         break;
     }
 
