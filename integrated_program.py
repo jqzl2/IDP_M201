@@ -152,11 +152,12 @@ def run():
 
     #     for struct in instructions:
     #         instructString+=struct + "."
-    
-    # instructString = "!" + instructString + "!"
-        instructString = "hi!0,005,015.!$"
-        mode = receive_dummy_mode(conn)
-        send_commands(instructString, conn)
+    while True:
+        if keyboard.is_pressed('s'):
+            # instructString = "!" + instructString + "!"
+            instructString = "hi!0,005,015.1,001,000.!$"
+            mode = receive_dummy_mode(conn)
+            send_commands(instructString, conn)
 
     #     if mode != 1:#
     #         instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
