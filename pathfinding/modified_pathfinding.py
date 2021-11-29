@@ -1,6 +1,7 @@
 import random
 from matplotlib import pyplot as plt
 from matplotlib import animation
+from pathfinding import goToPoint
 
 GoToNum = 0
 TurnNum = 1
@@ -8,7 +9,8 @@ CollectDummyNum = 2
 DepositDummyNum = 3
 ReturnToStartNum = 4
 
-def goToPoint(robot , goal, path):
+# goTo method for region B
+def goToPoint(robot, goal, path):
     '''
     input:
     robot = [x1, y1, 0/1]
@@ -18,47 +20,76 @@ def goToPoint(robot , goal, path):
     return:
     path = [[x path],[y path]]
     go to point directly by turning 90 degree 
-    match y then match x
+    match y then match x for some cases
+    match x then match y for other cases
     '''
-    # if y value doesn't match, break down
-    if robot[1] != goal[1]:
-        robot[1] = goal[1]
-        path[0].append(robot[0])
-        path[1].append(robot[1])
-        return goToPoint(robot , goal , path)
+    # assume wall on the right
+    # if goal in right top quadrant, match y then x
+    if (goal[2] == 1 and goal[0] >= goal[1]) or (goal[2] == 0 and goal[0] <= goal[1]):
+        # repeat until y matched
+        if robot[1] != goal[1]:
+            robot[1] = goal[1]
+            path[0].append(robot[0])
+            path[1].append(robot[1])
+            return goToPoint(robot , goal , path)
+        # repeat until x matched
+        if robot[0] != goal[0]:
+            robot[0] = goal[0]
+            path[0].append(robot[0])
+            path[1].append(robot[1])
+            return goToPoint(robot , goal , path)
 
-    # if x value doesn't match, repeat until match
-    if robot[0] != goal[0]:
-        robot[0] = goal[0]
-        path[0].append(robot[0])
-        path[1].append(robot[1])
-        return goToPoint(robot , goal , path)
+    # if goal in left top quadrant, match x then y
+    elif goal[2] == 1 and goal[0] < goal[1] or (goal[2] == 0 and goal[0] > goal[1]):
+        # repeat until x matched
+        if robot[0] != goal[0]:
+            robot[0] = goal[0]
+            path[0].append(robot[0])
+            path[1].append(robot[1])
+            return goToPoint(robot , goal , path)
+        # repeat until y matched
+        if robot[1] != goal[1]:
+            robot[1] = goal[1]
+            path[0].append(robot[0])
+            path[1].append(robot[1])
+            return goToPoint(robot , goal , path)
 
     robot[2] = goal[2]
     return path
 
-def findPath(robot , goal, path):
+def findPath(robot, goal, path, obstacle = []):
     '''
     input:
     robot = [x1, y1, 0/1]
-    goal = [x2, y2, 0/1]
+    goal = [[dummy1],[dummy2],[dummy3]]
+    obstacle = []
     path = [[x1], [y1]]
 
     return:
     path = [[x path],[y path]]
-    go to point considering if transition at corner needed
+    
+    considers: turning at corner to go over 0-1, dummies obstructing
     '''
-    # if robot and goal not on same side
+    # define region A and region B and region C
+    regionA = [240-43, 240-43, 1]
+    regionB = [240, 240, 1]
+    regionC = []
+
+    # if robot and goal not on same side, goToCorner added to path and findPath again
     if robot[2] != goal[2]:
         if robot[2] == 0:
             transitionPoint = [235,15,1]
         else:
             transitionPoint = [5,225,0]
-        return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
+        path = goToPoint(robot, transitionPoint, path)
+        robot = transitionPoint
 
-    # left top quadrant
-    if robot[2] == 1 and robot[0] < robot[1]:
-        path = goToPoint(robot, [225,235,1], path)
+    # if goal in left top quadrant
+    if robot[2] == 1 and goal[0] < goal[1]:
+        transitionPoint = [235,235,1]
+        path = goToPoint(robot, transitionPoint, path)
+        robot = transitionPoint
+        #path = findPath(robot , goal, path)
         #path = goToPoint(robot, [goal[0],235,1], path)
 
     path = goToPoint(robot, goal, path)
@@ -70,7 +101,6 @@ def pathToInstructions(path, direction, instructions):
     path 
     direction = direction of robot 0/1/2/3 (90 degree)
     instructions = current instructions
-
     '''
     toPrint = ""
 
@@ -80,12 +110,12 @@ def pathToInstructions(path, direction, instructions):
     goalDirect = 1
     if len(path[0]) == 1:
         return instructions
-    #change in x
+    # change in x
     if path[0][1] != path[0][0]:
         if path[0][0] < 240 - path[1][0]:
-            goalDirect = 1
             front = 240-path[0][1]
             side = path[1][1]
+            goalDirect = 1
         else:
             front = path[0][1]
             side = 240 - path[1][1]
@@ -103,7 +133,7 @@ def pathToInstructions(path, direction, instructions):
 
     toPrint = "go to " + str(front) + " from the front and " + str(side) + " from the side"
      
-    diff = (goalDirect - direction) % 4
+    diff = (goalDirect - direction)
     if diff == 3:
         diff = -1
     
