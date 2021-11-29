@@ -105,11 +105,7 @@ void setup() {
     rightServo.attach(9);
 
     openDoor();
-
-<<<<<<< HEAD
-    while(1){
-      Serial.println(DiffDummy());
-    }
+    
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
         Serial.println("Communication with WiFi module failed!");
@@ -208,8 +204,6 @@ String wifiWrapper() {
         Serial.println("client disconnected");
         return request;
     }
-=======
->>>>>>> 1b9b8cea5245bbf055e2082b43c27c1ed06578f8
 }
 
 int dummyMode() {

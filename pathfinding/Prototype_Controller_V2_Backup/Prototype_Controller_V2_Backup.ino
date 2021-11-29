@@ -801,6 +801,23 @@ void loop() {
         enterGoal(0, 0);
         //return to start needs tsome more logic made
 
+       case 5:
+         drive(255,255);
+         delay(input1 * 50);
+         drive(0,0);
+         break;
+
+       case 6:
+         maintainDistance(input1 * 50 , input2);
+         break;
+
+       case 7:
+          openDoor();
+          delay(5000);
+          closeDoor();
+          delay(5000);
+        
+
         break;
 
       case 5:
