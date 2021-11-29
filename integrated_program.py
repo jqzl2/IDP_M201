@@ -80,55 +80,33 @@ def dbscan(m, eps, min_points):
                 cluster_id = cluster_id + 1
     return classifications
 
-def test_dbscan():
-    m = np.matrix('1 1.2 0.8 3.7 3.9 3.6 10; 1.1 0.8 1 4 3.9 4.1 10')
-    eps = 0.5
-    min_points = 2
-    assert dbscan(m, eps, min_points) == [1, 1, 1, 2, 2, 2, None]
-
 def avg_dummy_positions(p):
-    dummy1_xs = []
-    dummy1_ys = []
-    dummy2_xs = []
-    dummy2_ys = []
-    dummy3_xs = []
-    dummy3_ys = []
 
     dummy_xs = []
     dummy_ys = []
 
     for frame in p:
-        dummy1 = frame[0]
-        dummy2 = frame[1]
-        dummy1_xs.append(dummy1[0])
-        dummy1_ys.append(dummy1[1])
-        dummy2_xs.append(dummy2[0])
-        dummy2_ys.append(dummy2[1])
+        # dummy1 = frame[0]
+        # dummy2 = frame[1]
 
-        dummy_xs.append(dummy1[0])
-        dummy_ys.append(dummy1[1])
-        dummy_xs.append(dummy2[0])
-        dummy_ys.append(dummy2[1])
-        
-        if len(frame) == 3:
-            dummy3 = frame[2]
-            dummy3_xs.append(dummy3[0])
-            dummy3_ys.append(dummy3[1])
+        # dummy_xs.append(dummy1[0])
+        # dummy_ys.append(dummy1[1])
+        # dummy_xs.append(dummy2[0])
+        # dummy_ys.append(dummy2[1])
 
-            dummy_xs.append(dummy3[0])
-            dummy_ys.append(dummy3[1])
+        for i in range(len(frame)):
+            dummy_xs.append(frame[i][0])
+            dummy_ys.append(frame[i][1])
         
-    dummy1_xs = np.array(dummy1_xs)
-    dummy1_ys = np.array(dummy1_ys)
-    dummy2_xs = np.array(dummy2_xs)
-    dummy2_ys = np.array(dummy2_ys)
-    dummy3_xs = np.array(dummy3_xs)
-    dummy3_ys = np.array(dummy3_ys)
+        # if len(frame) == 3:
+        #     dummy3 = frame[2]
+        #     dummy_xs.append(dummy3[0])
+        #     dummy_ys.append(dummy3[1])
 
     m = np.matrix([dummy_xs , dummy_ys])
     print(m)
     print("")
-    clusterIds = dbscan(m, 5, 2)
+    clusterIds = dbscan(m, 15, 0)
 
     metaDummies = []
 
@@ -137,8 +115,8 @@ def avg_dummy_positions(p):
             while len(metaDummies) < clusterIds[i]:
                 metaDummies.append([[],[]])
 
-            metaDummies[clusterIds[i]-1][0].append(dummy_xs[i])
-            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i])
+            metaDummies[clusterIds[i]-1][0].append(240 - (dummy_xs[i] * (240 / (((201 - 878)**2 + (735 - 705)**2)**0.5))))
+            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i] * (240 / (((201 - 178)**2 + (735 - 76)**2)**0.5)))
 
     metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
 
@@ -154,21 +132,17 @@ def run():
     #p = start_video(findDummies)
     #dummy1, dummy2, dummy3 = avg_dummy_positions(p)
     #dummies = [dummy1, dummy2, dummy3]
-    #dummies.sort() # sorting not done yet
 
     dummies = [[50,200,1]]
 
     for dummy in dummies:
         path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
         instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
-        arduino1 = urllib3.PoolManager()
+
         instructString = ""
 
         for struct in instructions:
             instructString+=struct + "."
-
-        arduino1.request('GET', 'http://192.168.137.131/?instructions=!' + instructString + '!')
-
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")

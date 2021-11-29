@@ -42,7 +42,7 @@ def start_video(f):
 	count = 0
 	data_mat = []
 	# Read until video is completed
-	while cam.isOpened() and len(data_mat) < 10:
+	while cam.isOpened() and len(data_mat) < 50:
 		# Capture frame-by-frame
 		ret, frame = cam.read()
 		if ret == True:
@@ -196,7 +196,7 @@ def findDummies(img):
 	
 	centres = []
 
-	for i in range(3):
+	for i in range(6):
 	 	M = cv2.moments(contours[i])
 	 	if M['m00'] != 0.0:
 			 x_centre = int(M['m10']/M['m00'])
