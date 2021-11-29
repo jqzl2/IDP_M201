@@ -106,7 +106,7 @@ def avg_dummy_positions(p):
     m = np.matrix([dummy_xs , dummy_ys])
     print(m)
     print("")
-    clusterIds = dbscan(m, 5, 2)
+    clusterIds = dbscan(m, 15, 0)
 
     metaDummies = []
 
@@ -115,8 +115,8 @@ def avg_dummy_positions(p):
             while len(metaDummies) < clusterIds[i]:
                 metaDummies.append([[],[]])
 
-            metaDummies[clusterIds[i]-1][0].append(dummy_xs[i])
-            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i])
+            metaDummies[clusterIds[i]-1][0].append(240 - (dummy_xs[i] * (240 / (((201 - 878)**2 + (735 - 705)**2)**0.5))))
+            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i] * (240 / (((201 - 178)**2 + (735 - 76)**2)**0.5)))
 
     metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
 
@@ -132,21 +132,17 @@ def run():
     #p = start_video(findDummies)
     #dummy1, dummy2, dummy3 = avg_dummy_positions(p)
     #dummies = [dummy1, dummy2, dummy3]
-    #dummies.sort() # sorting not done yet
 
     dummies = [[50,200,1]]
 
     for dummy in dummies:
         path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
         instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
-        arduino1 = urllib3.PoolManager()
+
         instructString = ""
 
         for struct in instructions:
             instructString+=struct + "."
-
-        arduino1.request('GET', 'http://192.168.137.131/?instructions=!' + instructString + '!')
-
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
