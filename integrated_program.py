@@ -1,6 +1,6 @@
 import keyboard
 from camera.video_capture import findDummies, start_video
-from pathfinding.pathfinding import findPath, generateInstructions
+from pathfinding.pathfinding import findPath, generateInstructions, sortDummies
 import numpy as np
 import urllib3
 import math
@@ -134,15 +134,46 @@ def run():
     #dummies = [dummy1, dummy2, dummy3]
 
     dummies = [[50,200,1]]
+    dummies = sortDummies(dummies)
+    instructString = ""
+    count = len(dummies)
 
-    for dummy in dummies:
-        path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
-        instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
+    for i in range(count):
+        instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
+        for struct in instructions:
+            instructString+=struct + "."
+
+        #string get sent
+        mode = 2 #mode is recived
 
         instructString = ""
 
+        if mode != 1:#
+            instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
+            for struct in instructions:
+                instructString+=struct + "."
+        else:
+            dummies.append(dummies[i])
+
+    if len(dummies) != count:
+        instructions, robot, direction = generateInstructions(robot, direction, dummies[count], [])
         for struct in instructions:
             instructString+=struct + "."
+        #string gets sent
+
+        instructString = ""
+
+        instructions, robot, direction = generateInstructions(robot , direction , 1 , [])
+        for struct in instructions:
+            instructString+=struct + "."
+
+    instructions, robot, direction = generateInstructions(robot , direction , 0 , [])
+    for struct in instructions:
+        instructString+=struct + "."
+
+        #string gets sent
+
+
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
