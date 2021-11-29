@@ -61,10 +61,8 @@ def findPath(robot , goal, path):
             transitionPoint = [5,225,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
-    # left top quadrant
-    if robot[2] == 1 and robot[0] < robot[1]:
-        path = goToPoint(robot, [225,235,1], path)
-        #path = goToPoint(robot, [goal[0],235,1], path)
+    if goal[2] == 1 and goal[0] > 240 - robotWidth:
+        path = goToPoint(robot , [goal[0] , 20] , path)
 
     path = goToPoint(robot, goal, path)
 
@@ -232,12 +230,12 @@ def sortDummies(dummies):
                     if abs(dummies[j][0] - dummies[i][0]) < robotWidth:
                         blocked = True
 
-                if dummies[j][0] > 240 - robotWidth:
-                    if dummies[j][1] < dummies[i][1]:
+                if dummies[i][0] > 240 - robotWidth:
+                    if dummies[i][1] < dummies[j][1]:
                         blocked = True
 
-                if dummies[j][1] > 250 - robotWidth:
-                    if dummies[j][0] < dummies[i][0]:
+                if dummies[i][1] > 240 - robotWidth:
+                    if dummies[i][0] < dummies[j][0]:
                         blocked = True
 
                 if blocked:
@@ -265,8 +263,8 @@ def sortDummies(dummies):
         else:
             #more please send help
             helperList = []
-            herlperVar = 1000
             for i in range(len(blocking[dummyNo - 1])):
+                herlperVar = 100000
                 for j in range(dummyNo):
                     if blocking[dummyNo - 1][i] != dummies[j]:
                         herlperVar = min(herlperVar , (blocking[i][0] - dummies[i][0])**2 + (blocking[i][1] - dummies[i][1])**2)
