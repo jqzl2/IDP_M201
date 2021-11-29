@@ -2,8 +2,8 @@ import keyboard
 from camera.video_capture import findDummies, start_video
 from pathfinding.pathfinding import findPath, generateInstructions
 import numpy as np
-import urllib3
 import math
+from wifi.server import set_up_server, receive_dummy_mode, send_commands
 
 
 # -*- coding: utf-8 -*-
@@ -127,22 +127,30 @@ def avg_dummy_positions(p):
     return dummy1, dummy2, dummy3
 
 def run():
+    conn = set_up_server()
     robot = [20, 10, 0]
     direction = 1
-    #p = start_video(findDummies)
-    #dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    #dummies = [dummy1, dummy2, dummy3]
+    
+    # p = start_video(findDummies)
+    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    # dummies = [dummy1, dummy2, dummy3]
 
-    dummies = [[50,200,1]]
+    # dummies = [[50,200,1]]
 
-    for dummy in dummies:
-        path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
-        instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
+    # for dummy in dummies:
+    #     path = findPath(robot, goal = dummy, path = [[robot[0]],[robot[1]]])
+    #     instructions, robot, direction = generateInstructions(robot, direction, [80,190,1])
 
-        instructString = ""
+    #     instructString = ""
 
-        for struct in instructions:
-            instructString+=struct + "."
+    #     for struct in instructions:
+    #         instructString+=struct + "."
+    
+    # instructString = "!" + instructString + "!"
+    instructString = "hi!0,005,015.!$"
+    receive_dummy_mode(conn)
+    send_commands(instructString, conn)
+
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")

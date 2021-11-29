@@ -30,15 +30,17 @@ def send_commands(commands, conn):                        # send commands to Ard
     #arduino_response = conn.recv(32)
     #print(arduino_response)                               # print Arduino response if commands sent successfully
 
-conn = set_up_server()
 
-i=0
-while(i<5):
-    i += 1
-    commands = ""
-    commands = "0,005,015.0,005,015$"
-    receive_dummy_mode(conn)
-    send_commands(commands, conn) 
+if __name__ == '__main__':
+    conn = set_up_server()
+
+    i=0
+    while(i<5):
+        i += 1
+        commands = ""
+        commands = "!0,005,015.0,005,015!"
+        receive_dummy_mode(conn)
+        send_commands(commands, conn) 
 
 
 
