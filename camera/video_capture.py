@@ -157,11 +157,14 @@ def findGoals(img):
 
 def ContSortFunct(contour):
 	area = cv2.contourArea(contour)
-
-	perim = cv2.arcLength(contour,True)
-	if contour[0][0][0] > contour[0][0][1] or (contour[0][0][0] < 75 and contour[0][0][1] > 575):
-		return Infinity
-	return area
+	M = cv2.moments(contour)
+	if M['m00'] != 0.0:
+		x_centre = int(M['m10']/M['m00'])
+		y_centre = int(M['m01']/M['m00'])
+		if x_centre > y_centre or (x_centre < 75 and y_centre > 575):
+			return Infinity
+		return area
+	return Infinity
 
 def findDummies(img):
 	img = isolateCenter(img)
