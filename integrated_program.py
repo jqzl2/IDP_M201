@@ -154,7 +154,8 @@ def run():
     #         instructString+=struct + "."
     
     # instructString = "!" + instructString + "!"
-        instructString = "hi!0,005,015.!$"
+    instructString = "hi!0,005,015.!$"
+    if keyboard.is_pressed('s'):
         mode = receive_dummy_mode(conn)
         send_commands(instructString, conn)
 
