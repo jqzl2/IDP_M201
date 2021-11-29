@@ -130,10 +130,14 @@ def run():
     conn = set_up_server()
     robot = [20, 10, 0]
     direction = 1
-    
-    # p = start_video(findDummies)
-    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    # dummies = [dummy1, dummy2, dummy3]
+    p = start_video(findDummies)
+    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    dummies = [dummy1, dummy2, dummy3]
+
+    print(dummies)
+    return 1
+
+    dummies = [[50,200,1]]
 
     # dummies = [[50,200,1]]
 
@@ -152,12 +156,12 @@ def run():
 
     #     for struct in instructions:
     #         instructString+=struct + "."
-    
-    # instructString = "!" + instructString + "!"
-    instructString = "hi!0,005,015.!$"
-    if keyboard.is_pressed('s'):
-        mode = receive_dummy_mode(conn)
-        send_commands(instructString, conn)
+    while True:
+        if keyboard.is_pressed('s'):
+            # instructString = "!" + instructString + "!"
+            instructString = "hi!0,005,015.1,001,000.!$"
+            mode = receive_dummy_mode(conn)
+            send_commands(instructString, conn)
 
     #     if mode != 1:#
     #         instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
