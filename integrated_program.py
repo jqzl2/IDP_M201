@@ -130,25 +130,25 @@ def run():
     conn = set_up_server()
     robot = [20, 10, 0]
     direction = 1
-    p = start_video(findDummies)
-    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    dummies = [dummy1, dummy2, dummy3]
+    # p = start_video(findDummies)
+    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    # dummies = [dummy1, dummy2, dummy3]
 
-    print(dummies)
-
-    dummies = [[50,200,1]]
+    # print(dummies)
 
     # dummies = [[50,200,1]]
 
-    dummies = [[50,200,1]]
-    dummies = sortDummies(dummies)
-    instructString = ""
-    count = len(dummies)
+    # # dummies = [[50,200,1]]
 
-    for i in range(count):
-        instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
-        for struct in instructions:
-            instructString+=struct + "."
+    # dummies = [[50,200,1]]
+    # dummies = sortDummies(dummies)
+    # instructString = ""
+    # count = len(dummies)
+
+    # for i in range(count):
+    #     instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
+    #     for struct in instructions:
+    #         instructString+=struct + "."
 
         #string get sent
         #mode is recived

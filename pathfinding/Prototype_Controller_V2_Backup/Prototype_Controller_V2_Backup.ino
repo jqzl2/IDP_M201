@@ -341,7 +341,6 @@ int distanceFront() {
 
 //returns the distance from the side of the vehical
 int distanceSide() {
-  Serial.println("hello");
   //get the two distances
   IRDistance = sideIR.distance();
   USDistance = readUltraSonic(trigPinSide, echoPinSide);
@@ -591,9 +590,9 @@ void turnOnSpot(int n) {
 
   //this is used to ensure that the robot is close to straight
   //not neccessary but makes robot run faster in the end
-  while (angleSide() < 0) {
-    delay(1);
-  }
+  //while (angleSide() < 0) {
+    //delay(1);
+  //}
 
   //make sure wheels always end neutral
   drive(0, 0);
@@ -686,7 +685,7 @@ int collectDummy(int dummySide) {
 
   //get close to dummy
   //goToDistance(0, dummySide);
-  int delta = blindDrive(2, 1);
+  int delta = blindDrive(2, 2);
 
   //detect mode
   int dummyMode = DiffDummy();
@@ -816,26 +815,7 @@ void loop() {
           delay(5000);
           closeDoor();
           delay(5000);
-        
-
-        break;
-
-      case 5:
-        drive(255,255);
-        delay(input1 * 50);
-        drive(0, 0);
-        break;
-
-      case 6:
-        maintainDistance(input1 * 50, input2);
-        break;
-
-      case 7:
-        openDoor();
-        delay(5000);
-        closeDoor();
-        delay(5000);
-        break;
+          break;
     }
 
     Serial.println(operation);
@@ -854,4 +834,5 @@ void loop() {
     }
   }
   }
+  digitalWrite(redPin, LOW);
 }
