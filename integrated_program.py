@@ -128,83 +128,70 @@ def avg_dummy_positions(p):
 
 def run():
     conn = set_up_server()
-    robot = [20, 10, 0]
-    direction = 1
-    # p = start_video(findDummies)
-    # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    # dummies = [dummy1, dummy2, dummy3]
 
-    # print(dummies)
-
-    # dummies = [[50,200,1]]
-
-    # # dummies = [[50,200,1]]
-
-    # dummies = [[50,200,1]]
-    # dummies = sortDummies(dummies)
-    # instructString = ""
-    # count = len(dummies)
-
-    # for i in range(count):
-    #     instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
-    #     for struct in instructions:
-    #         instructString+=struct + "."
-
-        #string get sent
-        #mode is recived
-
-    #     for struct in instructions:
-    #         instructString+=struct + "."
-    
-    # instructString = "!" + instructString + "!"
     while True:
-        if keyboard.is_pressed('s'):
-            command = input("Insert command: ")
-            command = str(command)
-            instructString = "hi!" + command + "!$" 
-            mode = receive_dummy_mode(conn)
-            send_commands(instructString, conn)
+        robot = [10, 20, 0]
+        direction = 1
+    #     # p = start_video(findDummies)
+    #     # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    #     # dummies = [dummy1, dummy2, dummy3]
 
-    #     if mode != 1:
-    #         instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
-    #         for struct in instructions:
-    #             instructString+=struct + "."
-    #     else:
-    #         dummies.append(dummies[i])
+        dummies = [[130,225,1]]
+        instructString = ""
+        count = len(dummies)
 
-    # if len(dummies) != count:
-    #     instructions, robot, direction = generateInstructions(robot, direction, dummies[count], [])
-    #     for struct in instructions:
-    #         instructString+=struct + "."
+        for i in range(count):
+            instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
+            for struct in instructions:
+                instructString+=struct + "."
 
-    #     mode = receive_dummy_mode(conn)
-    #     send_commands(instructString, conn)
+            instructString = "hi!" + instructString + "!$"
+            if instructString:
+                send_commands(instructString, conn)
+                mode = receive_dummy_mode(conn)
+                return
 
-    #     instructString = ""
+            for struct in instructions:
+                instructString+=struct + "."
+        
+        instructString = "hi!" + instructString + "!$"
+        
+        # while True:
+        #     if keyboard.is_pressed('s'):
+        #         command = input("Insert command: ")
+        #         command = str(command)
+        #         instructString = "hi!" + command + "!$" 
+        #         mode = receive_dummy_mode(conn)
+        #         send_commands(instructString, conn)
 
-    #     instructions, robot, direction = generateInstructions(robot , direction , 1 , [])
-    #     for struct in instructions:
-    #         instructString+=struct + "."
+        # if mode != 1:
+        #     instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
+        #     for struct in instructions:
+        #         instructString+=struct + "."
+        # else:
+        #     dummies.append(dummies[i])
 
-    # instructions, robot, direction = generateInstructions(robot , direction , 0 , [])
-    # for struct in instructions:
-    #     instructString+=struct + "."
+        # if len(dummies) != count:
+        #     instructions, robot, direction = generateInstructions(robot, direction, dummies[count], [])
+        #     for struct in instructions:
+        #         instructString+=struct + "."
 
-    #     mode = receive_dummy_mode(conn)
-    #     send_commands(instructString, conn)
+        #     mode = receive_dummy_mode(conn)
+        #     send_commands(instructString, conn)
 
+        #     instructString = ""
 
+        #     instructions, robot, direction = generateInstructions(robot , direction , 1 , [])
+        #     for struct in instructions:
+        #         instructString+=struct + "."
+
+        # instructions, robot, direction = generateInstructions(robot , direction , 0 , [])
+        # for struct in instructions:
+        #     instructString+=struct + "."
+
+        #     #mode = receive_dummy_mode(conn)
+        #     send_commands(instructString, conn)
 
 if __name__ == "__main__":
     print("*** WacMan Program ***")
     run()
-
-
-
-
-
-
-
-
-
-

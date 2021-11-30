@@ -56,9 +56,9 @@ def findPath(robot , goal, path):
     # if robot and goal not on same side
     if robot[2] != goal[2]:
         if robot[2] == 0:
-            transitionPoint = [235,15,1]
+            transitionPoint = [255,15,1]
         else:
-            transitionPoint = [5,225,0]
+            transitionPoint = [25,225,0]
         return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
 
     if goal[2] == 1 and goal[0] > 240 - robotWidth:
@@ -114,6 +114,7 @@ def pathToInstructions(path, direction, instructions, dummies):
     if diff != 0:
         toPrint = "rotate " +  str(diff * 90) + " degrees clockwise, then " + toPrint
         instructions.append(str(TurnNum) + "," + str(diff).zfill(3) + "," + str(0).zfill(3))
+        front -= 20
 
     goal = [path[0][len(path[0]) - 1], path[1][len(path[0]) - 1]]
 
@@ -193,7 +194,8 @@ def generateInstructions(robot , direction, goal, dummies):
     finalInstruct = ""
 
     if dummy:
-        finalInstruct = str(CollectDummyNum) + "," + str(240 - goal[1]).zfill(3) + ",000"
+        finalInstruct += str(GoToNum) + "," + str(0).zfill(3) + "," + str(240 - goal[1]).zfill(3) + "."
+        finalInstruct += str(CollectDummyNum) + "," + str(240 - goal[1]).zfill(3) + ",000"
     else:
         if returnToStart:
             finalInstruct = str(ReturnToStartNum) + ",000,000"
@@ -201,6 +203,7 @@ def generateInstructions(robot , direction, goal, dummies):
             finalInstruct = str(DepositDummyNum) + "," + str(goal[1]).zfill(3) + ",000"
 
     instruct[len(instruct) -1] = finalInstruct
+    #instruct.append(finalInstruct)
 
     return instruct , robot, direction % 4
 
