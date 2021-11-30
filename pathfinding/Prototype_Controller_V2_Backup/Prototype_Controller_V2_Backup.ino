@@ -30,7 +30,7 @@
 #define RTurn 1000
 
 #define IRPinS A3
-#define IRPinF A4
+#define IRPinF A2
 
 #define qsdPin1 A0
 #define qsdPin2 A1
@@ -114,8 +114,8 @@ void setup() {
   MR -> run(RELEASE);
 
   //attaching servos to correct ports
-  leftServo.attach(10);
-  rightServo.attach(9);
+  leftServo.attach(9);
+  rightServo.attach(10);
 
   openDoor();
 
@@ -315,8 +315,6 @@ int readUltraSonic(int pulse, int returnPin) {
   digitalWrite(pulse, LOW);
 
   duration = pulseIn(returnPin, HIGH);
-  Serial.print("Duration: ");
-  Serial.println(duration);
   if (duration) {
     return (duration * 0.034 / 2);
   }
@@ -326,18 +324,21 @@ int readUltraSonic(int pulse, int returnPin) {
 //returns the distance from the front of the vehical
 int distanceFront() {
 
-  int fDist = frontIR.distance() - IROffset;
+  int fDist = frontIR.distance();
+  int uDist = readUltraSonic(trigPinFront, echoPinFront);
 
   //if the robot is moving a dummy or
   //if the robot is at the limits of the US sensor, and is not collecting
-  if (carrying or (fDist > 70 and !collecting)) {
+  if (carrying or (uDist > 70 and !collecting)) {
     //just use the IR sensor
-    return fDist;
+    return fDist - IROffset;
   }
 
   //just use the US sensor
-  return readUltraSonic(trigPinFront, echoPinFront) - USOffset;
+  return  uDist - USOffset;
 }
+
+
 
 //returns the distance from the side of the vehical
 int distanceSide() {
@@ -360,9 +361,6 @@ int distanceSide() {
 
   float X5 = X3 + (C1 * t);
   float Y5 = Y3 + (C2 * t);
-
-  Serial.println(pow((X5 * X5) + (Y5 * Y5), 0.5) + 10);
-  delay(100);
 
   return pow((X5 * X5) + (Y5 * Y5), 0.5) + 10;
 }
@@ -452,7 +450,7 @@ void enterGoal(int mode, int sideGoal) {
 
 // this is a wrapper to deal with the carrying logic
 // the robot does each goTo multiple times to account for bad sensor reads
-void goToDistanceWrapper(int goal, int sideGoal) {
+void goToDistanceWrapper (int goal, int sideGoal) {
   if (carrying) {
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
@@ -515,7 +513,10 @@ void maintainDistance(int deltaTime, int sideGoal) {
   dt = deltaTime;
   int start = millis();
 
-  while (millis() - start < dt) {
+  while (millis() - start < deltaTime
+  
+  
+  ) {
     adjustDrive(sideGoal, 1);
   }
 
@@ -530,7 +531,6 @@ void adjustDrive(int sideGoal, int sign) {
 
   //mult is the difference between the side goal and value
   mult = (float) distanceSide() / (float) sideGoal;
-  Serial.println(mult);
   mult = 1 - mult;
 
   //feedback factors for fine tuning if required
@@ -551,15 +551,6 @@ void adjustDrive(int sideGoal, int sign) {
 
   //drive with corrected speed
   drive(rightSpeed, leftSpeed);
-
-  //debugging prints
-  Serial.println(distanceFront());
-  Serial.println(distanceSide());
-  Serial.println(rightSpeed);
-  Serial.println(leftSpeed);
-  Serial.println(mult);
-  Serial.println("");
-
 }
 
 //this turns corners in a fixed radius, used for going around the obsticals
@@ -611,6 +602,7 @@ void closeDoor() {
 }
 
 
+/*
 int blindDrive(int dist, int sign) {
   drive(255 * sign, 255 * sign);
   int start = millis();
@@ -674,6 +666,7 @@ void goToGoal(int mode) {
   goToDistanceWrapper(5, 15);
   turnOnSpot(1);
 }
+*/
 
 //dummy collection logic
 int collectDummy(int dummySide) {
@@ -685,7 +678,7 @@ int collectDummy(int dummySide) {
 
   //get close to dummy
   //goToDistance(0, dummySide);
-  int delta = blindDrive(2, 2);
+  goToDistanceWrapper(0, dummySide);
 
   //detect mode
   int dummyMode = DiffDummy();
@@ -717,11 +710,7 @@ int collectDummy(int dummySide) {
   //back to default mode handling
   collecting = false;
 
-  drive(-255, -255);
-  delay(delta + 350);
-  drive(0, 0);
-
-  goToGoal(dummyMode);
+  //goToGoal(dumm yMode);
 
   //return mode
   return dummyMode;
@@ -729,9 +718,10 @@ int collectDummy(int dummySide) {
 
 void loop() {
   WiFiClient client = set_up_server();
+  int mode = 0;
   while(true){
   String commands;
-  String request = send_mode_receive_path(client, 3);
+  String request = send_mode_receive_path(client, mode);
   digitalWrite(redPin, HIGH);
   char * crequest = new char[request.length() + 1];
   strcpy(crequest, request.c_str());
@@ -780,13 +770,15 @@ void loop() {
         break;
 
       case 1:
-        turnOnSpot(input1);
+        turnOnSpot(input1 * -1);
         //turn on spot
         break;
 
       case 2:
 
-        collectDummy(input1);
+        goToDistance(0, input1);
+
+        mode =   collectDummy(input1);
 
         //collect dummy
         break;
