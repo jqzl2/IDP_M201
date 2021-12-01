@@ -130,18 +130,19 @@ def run():
     conn = set_up_server()
 
     while True:
-        robot = [10, 20, 0]
+        robot = [10, 15, 0]
         direction = 1
     #     # p = start_video(findDummies)
     #     # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
     #     # dummies = [dummy1, dummy2, dummy3]
 
-        dummies = [[130,225,1]]
+        dummies = [[220,220,1]]
         instructString = ""
         count = len(dummies)
 
         for i in range(count):
             instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
+            #instructions, robot, direction = generateInstructions(robot, direction, 2, dummies[i:])
             for struct in instructions:
                 instructString+=struct + "."
 

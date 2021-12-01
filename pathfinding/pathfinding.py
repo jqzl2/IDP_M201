@@ -56,13 +56,22 @@ def findPath(robot , goal, path):
     # if robot and goal not on same side
     if robot[2] != goal[2]:
         if robot[2] == 0:
-            transitionPoint = [255,15,1]
+            transitionPoint = [235,15,1]
+            xError = -20
+            yError = 20
         else:
-            transitionPoint = [25,225,0]
-        return findPath(robot , goal, goToPoint(robot, transitionPoint, path))
+            transitionPoint = [15,225,0]
+            xError = 20
+            yError = -20
+        path = goToPoint(robot, transitionPoint, path)
+        robot[0] += xError
+        robot[1] += yError
+        path[0].append(robot[0])
+        path[1].append(robot[1])
+        return findPath(robot , goal, path)
 
-    if goal[2] == 1 and goal[0] > 240 - robotWidth:
-        path = goToPoint(robot , [goal[0] , 20] , path)
+    if goal[2] == 1 and goal[0] > 240 - (2*robotWidth):
+        path = goToPoint(robot , [goal[0] , 40, 1] , path)
 
     path = goToPoint(robot, goal, path)
 
@@ -86,6 +95,14 @@ def pathToInstructions(path, direction, instructions, dummies):
         return instructions
     #change in x
     if path[0][1] != path[0][0]:
+        if path[1][0] != path[1][1]:
+            instruct = pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions, dummies) , direction
+
+            if len(instruct) == 2:
+                instruct = instruct[0]
+
+            return instruct
+
         if path[0][0] < 240 - path[1][0]:
             goalDirect = 1
             front = 240-path[0][1]
@@ -112,30 +129,47 @@ def pathToInstructions(path, direction, instructions, dummies):
         diff = -1
     
     if diff != 0:
+        if len(instructions) != 0:
+            if str(instructions[-1]).split(',')[0] == "0,":
+                temp = str(instructions[-1]).split(',')
+                temp[1] = str(int(temp[1]) - 20)
+                temps = ""
+                for S in temp:
+                    temps += S
+
+                instructions[-1] = temps
         toPrint = "rotate " +  str(diff * 90) + " degrees clockwise, then " + toPrint
         instructions.append(str(TurnNum) + "," + str(diff).zfill(3) + "," + str(0).zfill(3))
-        front -= 20
+        #front -= 20
 
     goal = [path[0][len(path[0]) - 1], path[1][len(path[0]) - 1]]
 
+
+    if goalDirect == 1 or goalDirect == 3:
+        delta = 0
+    else:
+        delta = 1
+    x0 = path[delta][0]
+    x1 = path[delta][1]
+
+    if x0 > x1:
+        x0 , x1 = x1 , x0
+
     for dummy in dummies:
         if dummy[0] != goal[0] and dummy[1] != goal[1]:
-            if goalDirect == 1 or goalDirect == 3:
-                delta = 0
-            else:
-                delta = 1
-            x0 = path[delta][0]
-            x1 = path[delta][1]
-
-            if x0 > x1:
-                x0 , x1 = x1 , x0
+            
             if dummy[delta] > x0 and dummy[delta] < x1:
                 if abs(dummy[(delta - 1) ** 2] - path[(delta - 1) ** 2][1]) < robotWidth:
                     travelDist = abs(path[delta][0] - dummy[delta]) - 5
-                    instructions.append(str(MaintainDistNum) + "," + str(travelDist).zfill(3) + "," + str(side).zfill(3))
+                    instructions.append(str(DummyAvoidanceNum) + "," + str(travelDist).zfill(3) + "," + str(side).zfill(3))
                     goAround(instructions)
-
-    instructions.append(str(GoToNum) + "," + str(front).zfill(3) + "," + str(side).zfill(3))
+    if front > 150 or side > 60:
+        if side > 60:
+            instructions.append(str(DummyAvoidanceNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
+        else:
+            instructions.append(str(MaintainDistNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
+    else:
+        instructions.append(str(GoToNum) + "," + str(front).zfill(3) + "," + str(side).zfill(3))
 
     #print(toPrint)
 
@@ -183,6 +217,7 @@ def generateInstructions(robot , direction, goal, dummies):
         dummy = False
 
     path = findPath(robot , goal, [[robot[0]],[robot[1]]])
+    print(path)
     instruct = pathToInstructions(path, direction, instruct, dummies)
 
 
@@ -376,10 +411,10 @@ def animate(i):
 
 
 
-SDummies  = sortDummies([[230 , 150 , 1],[150,230 , 1],[150,150 , 1]])
-I = generateInstructions([10,15,0] , 1 , SDummies[0], SDummies)
-print(SDummies)
-print(I)
+# SDummies  = sortDummies([[230 , 150 , 1],[150,230 , 1],[150,150 , 1]])
+# I = generateInstructions([10,15,0] , 1 , SDummies[0], SDummies)
+# print(SDummies)
+# print(I)
 # step 1 sort dummies
 #sort dummies into buckets, in terms of how many dummies they block
 #sort bucket in terms of distance from walls

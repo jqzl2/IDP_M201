@@ -27,7 +27,7 @@
 #define X4 X2
 
 //#define RTurn 862
-#define RTurn 1000
+#define RTurn 862
 
 #define IRPinS A3
 #define IRPinF A2
@@ -602,11 +602,11 @@ void closeDoor() {
 }
 
 
-/*
+
 int blindDrive(int dist, int sign) {
   drive(255 * sign, 255 * sign);
   int start = millis();
-  while (distanceFront() * sign > dist * sign) {
+  while ((millis() - start) < dist * 50) {
     delay(1);
   }
   return millis() - start;
@@ -666,7 +666,7 @@ void goToGoal(int mode) {
   goToDistanceWrapper(5, 15);
   turnOnSpot(1);
 }
-*/
+
 
 //dummy collection logic
 int collectDummy(int dummySide) {
