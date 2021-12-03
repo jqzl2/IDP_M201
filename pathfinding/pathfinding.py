@@ -1,8 +1,4 @@
-import random
-import math
-from matplotlib import pyplot as plt
-from matplotlib import animation
-
+#setting up constants for instruction generation
 GoToNum = 0
 TurnNum = 1
 CollectDummyNum = 2
@@ -10,7 +6,6 @@ DepositDummyNum = 3
 ReturnToStartNum = 4
 DummyAvoidanceNum = 5
 MaintainDistNum = 5
-
 robotWidth = 15
 
 def goToPoint(robot , goal, path):
@@ -22,32 +17,42 @@ def goToPoint(robot , goal, path):
 
     return:
     path = [[x path],[y path]]
-    go to point directly by turning 90 degree 
+    go to point directly by turning 90 degree
     match y then match x
     '''
-    xError = 10
-    yError = 20
-    # if y value doesn't match, repeat until match
+    # if y value doesn't match, repeat until it matches
     if robot[1] != goal[1]:
+        #if the robot is going up/down
         if robot[1] > goal[1]:
             sign = -1
         else:
             sign = 1
+        #first the robot sets its new position
         robot[1] = goal[1]
+
+        #the robot will go to the its x value then overshoot its y value by 20
+        #this is done to acount for the change in y due to rotation
         path[0].append(robot[0])
         path[1].append(robot[1] + (sign * 20))
+        #the robot then rotates
         path[0].append(robot[0] + (sign * 10))
         path[1].append(robot[1])
+        #call the function again
         return goToPoint(robot , goal , path)
 
-    # if x value doesn't match, repeat until match
+    # if x value doesn't match, repeat until it matches
     if robot[0] != goal[0]:
+        #set the new x value
         robot[0] = goal[0]
+        #go to the location
         path[0].append(robot[0])
         path[1].append(robot[1])
+        #call the function again
         return goToPoint(robot , goal , path)
 
+    #ensure that the half is correct
     robot[2] = goal[2]
+    #return the entire path so far
     return path
 
 def findPath(robot , goal, path):
@@ -63,26 +68,36 @@ def findPath(robot , goal, path):
     '''
     # if robot and goal not on same side
     if robot[2] != goal[2]:
+        #if the robot is on the lower half
         if robot[2] == 0:
+            #set the transition points and errors
             transitionPoint = [238,15,1]
             xError = -20
             yError = 20
         else:
+            #set the transition points and errors
             transitionPoint = [13,225,0]
             xError = 20
             yError = -20
+        #go to the transition point, changing halves in the process
         path = goToPoint(robot, transitionPoint, path)
+        #account for the robot turning
         robot[0] += xError
         robot[1] += yError
         path[0].append(robot[0])
         path[1].append(robot[1])
+        #find the path from this point to the goal
         return findPath(robot , goal, path)
 
+    #if the dummy is very close to the right wall then go to an intermediate point that has the same
+    #x but a lesser y
     if goal[2] == 1 and goal[0] > 240 - (2*robotWidth):
         path = goToPoint(robot , [goal[0] , 80, 1] , path)
 
+    #go to the dummy
     path = goToPoint(robot, goal, path)
 
+    #return the entire path
     return path
 
 def pathToInstructions(path, direction, instructions, dummies):
@@ -93,104 +108,136 @@ def pathToInstructions(path, direction, instructions, dummies):
     dummies = list of dummy posotions
 
     '''
-    toPrint = ""
 
+    #setting up vairables
     front = 0
     side = 0
-
     goalDirect = 1
+
+    #if the path is done then return the instructions
     if len(path[0]) == 1:
         return instructions
+
     #change in x
     if path[0][1] != path[0][0]:
+        #if there is a change in x and y then there has been a rotation and this point should be ignored
         if path[1][0] != path[1][1]:
+            #call the function again
             instruct = pathToInstructions([path[0][1:],path[1][1:]], direction, instructions, dummies) , direction
-
+            #used to cure the insctruction as they need to remove the direction
             if len(instruct) == 2:
                 instruct = instruct[0]
-
             return instruct
 
+        #if the robot is in the bottom half
         if path[0][0] < 240 - path[1][0]:
+            #go to the right
             goalDirect = 1
             front = 240-path[0][1]
             side = path[1][1]
         else:
+            #go to the left
             front = path[0][1]
             side = 240 - path[1][1]
             goalDirect = 3
    
     else:
+        #if the robot is in the bottom half
         if path[0][0] < 240 - path[1][0]:
+            #go down
             goalDirect = 2
             front = path[1][1]
             side = path[0][1]
         else:
+            #go up
             goalDirect = 0
             front = 240 - path[1][1]
             side = 240 - path[0][1]
 
-    toPrint = "go to " + str(front) + " from the front and " + str(side) + " from the side"
-     
+    #calculates the change in direction
     diff = (goalDirect - direction) % 4
-    print(goalDirect,direction)
     if diff == 3:
         diff = -1
-    
+
+    #if there is any change in direction
     if diff != 0:
+        #if this is not the first instruction
         if len(instructions) != 0:
+            #if the previous instruction was a rotation
             if str(instructions[-1]).split(',')[0] == "0,":
+                #change its distance from the fron by 20, the length of the robot
                 temp = str(instructions[-1]).split(',')
                 temp[1] = str(int(temp[1]) - 20)
                 temps = ""
                 for S in temp:
                     temps += S
-
                 instructions[-1] = temps
-        toPrint = "rotate " +  str(diff * 90) + " degrees clockwise, then " + toPrint
+        #append the turn instruction
         instructions.append(str(TurnNum) + "," + str(diff).zfill(3) + "," + str(0).zfill(3))
-        #front -= 20
 
+    #goal is where the robot is going eventually
     goal = [path[0][len(path[0]) - 1], path[1][len(path[0]) - 1]]
 
 
+    #if the x or y is changing
     if goalDirect == 1 or goalDirect == 3:
         delta = 0
     else:
         delta = 1
+    #delta is the list that contains the change, meaing x0 x1 are the changed values
     x0 = path[delta][0]
     x1 = path[delta][1]
 
+    #ensure that x0 and x1 are ordered
     if x0 > x1:
         x0 , x1 = x1 , x0
 
+    #for every dummy
     for dummy in dummies:
+        #if the dummy is the final goal there is no need to avoid it
         if dummy[0] != goal[0] and dummy[1] != goal[1]:
-            
+            #if the dummy lies somewhere perpendicular to the path
             if dummy[delta] > x0 and dummy[delta] < x1:
+                #if the dummy lies very close to the path
                 if abs(dummy[(delta - 1) ** 2] - path[(delta - 1) ** 2][1]) < robotWidth:
+                    #avoiding the dummy
+                    #approach the dummy to be 5 cm away
                     travelDist = abs(path[delta][0] - dummy[delta]) - 5
                     instructions.append(str(DummyAvoidanceNum) + "," + str(travelDist).zfill(3) + "," + str(side).zfill(3))
+                    #go around the dummy
                     goAround(instructions)
+
+    #if the robot cannot use at least 1 set of its sensors
     if front > 100 or side > 60:
+        #if the robot is too far away from the wall to wall follow
         if side > 60:
             instructions.append(str(DummyAvoidanceNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
         else:
+            #if the robot is too far away from the front wall to stop correctly
             instructions.append(str(MaintainDistNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
     elif front < 150 and side < 60:
+        #use the normal wall following
         instructions.append(str(GoToNum) + "," + str(front).zfill(3) + "," + str(side).zfill(3))
 
-    #print(toPrint)
-
+    #call the function again
     instruct = pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions, dummies) , direction
 
+    #cure the instructions
     if len(instruct) == 2:
         instruct = instruct[0]
-
     return instruct
 
 
 def goAround(instructions):
+    '''
+    input:
+    instructions = [instruction]
+
+    return:
+    instructions = [instruction]
+    appends instructions to go around a dummy
+    '''
+
     # turn left drive for 1s
     instructions.append(str(TurnNum) + "," + str(-1).zfill(3) + "," + str(0).zfill(3))
     instructions.append(str(DummyAvoidanceNum) + "," + str(10).zfill(3) + "," + str(0).zfill(3))
@@ -208,223 +255,207 @@ def goAround(instructions):
 
 
 def generateInstructions(robot , direction, goal, dummies):
+    '''
+    input:
+    robot = [x1, y1, 0/1]
+    direction = 0,1,2,3 (90 degree roations)
+    goal = [x2, y2, 0/1]
+    dummies = [[[dx1], [dy1] , ... , [dx3],[dy3]]]
+
+    return:
+    instructions = [instruction]
+    robot = [x1, y1, 0/1]
+    direction = 0,1,2,3 (90 degree roations)
+    generates the instructions to get the robot from its location to its goal
+    '''
+    #setting up variables
     instruct = []
     dummy = True
     returnToStart = False
-
-    ##this is currently where the goal positions are stored
-
+    finalInstruct = ""
+    #this is currently where the goal positions are stored
     # [home, white, red, blue]
     dummyGoals = [[24,24,0], [215,215,1], [50,90,0], [90,50,0]]
 
+    #if an int is passed the  the goal is a return goal
     if type(goal) == int:
-        #this is a dummy goal
+        #this is a the final goal
         if goal == 0:
             returnToStart = True
-
+        #set the goal location and type
         goal = dummyGoals[goal]
         dummy = False
 
+    #find the path that the robot should take
     path = findPath(robot , goal, [[robot[0]],[robot[1]]])
-    print(path)
+    
+    #generate the instructions for that path
     instruct = pathToInstructions(path, direction, instruct, dummies)
 
-
+    #reconstruct the instructions to find the turning number
     for struct in instruct:
         data = str(struct).split(',')
         if data[0] == str(TurnNum):
+            #change the direction such that its correct to the final state of the robot
             direction += int(data[1])
-
-    finalInstruct = ""
-
+    
+    #if the robot is collecting a dummy
     if dummy:
+        #final instruction is to get very close to the dummy then collect is
         finalInstruct += str(GoToNum) + "," + str(0).zfill(3) + "," + str(240 - goal[1]).zfill(3) + "."
         finalInstruct += str(CollectDummyNum) + "," + str(240 - goal[1]).zfill(3) + ",000"
     else:
         if returnToStart:
+            #final instruction is to return to the very start position
             finalInstruct = str(ReturnToStartNum) + ",000,000"
         else:
+            #final instruction is to deposit a dummy in the correct goal
             finalInstruct = str(DepositDummyNum) + "," + str(goal[1]).zfill(3) + ",000"
 
+    #cahnge the final instruction to be the correct one
     instruct[len(instruct) -1] = finalInstruct
-    #instruct.append(finalInstruct)
 
+    #return the data for the robot to continue its journey
     return instruct , robot, direction % 4
 
+#custom sort parameter that returns (240 - the distance to the closest edge wall)
 def dummySortFunct(x):
+    #if the answer will be the top wall
     if x[0][0] > x[0][1]:
+        #return the y
         return x[0][1]
+    #return the x
     return x[0][0]
 
 
 def sortDummies(dummies):
-    print(dummies)
+    '''
+    input:
+    dummies = [[[dx1], [dy1] , ... , [dx3],[dy3]]]
+
+    return:
+    dummies = [[[dx1], [dy1] , ... , [dx3],[dy3]]]
+    sorts the dummies list into its collection order
+    '''
+
+    #creating the blocking buckets, the max number of dummies a dummy can block is 1- dummyNo
     blocking = []
     dummyNo = len(dummies)
     for i in range(dummyNo):
         blocking.append([])
+
     blocked = False
+    #for every dummy
     for i in range(dummyNo):
         count = 0
+        #for every other dummy
         for j in range(dummyNo):
             if i != j:
+                #assume its not blocking
                 blocked = False
+
+                #the first two modes are for if the robot will collide with the dummy during the L section of its movement
+                #if the other dummy has a lower x value
                 if dummies[j][0] < dummies[i][0]:
+                    #and their y value is close enough to colide
                     if abs(dummies[j][1] - dummies[i][1]) < robotWidth:
+                        #then the dummy I is blocking the dummy j
                         blocked = True
 
-                if dummies[j][1] < dummies[i][1]:
+                #if the other dummy has a lower y value
+                if dummies[j][1] < dummies[i][1]: 
+                    #and their x value is close enough to colide
                     if abs(dummies[j][0] - dummies[i][0]) < robotWidth:
                         blocked = True
 
+                #the second 2 modes are for the if dummy is located in the path outside of the L section
+                #if the dummy is close to the right wall
                 if dummies[i][0] > 240 - robotWidth:
+                    #and the other dummy is above it
                     if dummies[i][1] < dummies[j][1]:
                         blocked = True
-
+                #if the dummy is close to the top wall
                 if dummies[i][1] > 240 - robotWidth:
+                    #and the other dummy is to the right of it
                     if dummies[i][0] < dummies[j][0]:
                         blocked = True
-
+                #if the other dummy is blocked then the blocked number for the dummy goes up by 1
                 if blocked:
-                    count += 1
+                    count += 1  
+        #add the dummy to the correct bucked
         blocking[count].append(dummies[i])
 
+    #effectivally removes the empty buckets at the top, to prevent infinate recursion if no dummies are blocking the max amount
     while(len(blocking[dummyNo - 1]) == 0):
         blocking.insert(0, [])
 
-
+    #error catching for trying to access empty lists
     if len(blocking[dummyNo - 1]) != 0:
         #1 blocking 2
         if len(blocking[dummyNo - 1]) == 1:
+            #return the most blocking dummy
             ret = blocking[dummyNo - 1][0]
 
         #2 blocking 2
         elif len(blocking[dummyNo - 1]) == 2:
+            #the robot doesnt want to go round a dummy while transporting one so priority is given to the lates dummy in this case
+            #if the first dummy is earlier in the path than the second one
             if blocking[dummyNo -1][0] > blocking[dummyNo - 1][1]:
+                #return the second dummy
                 ret = blocking[dummyNo - 1][1]
                 blocking[dummyNo - 2].append(blocking[dummyNo - 1][0])
             else:
+                #return the first dummy
                 ret = blocking[dummyNo - 1][0]
                 blocking[dummyNo - 2].append(blocking[dummyNo - 1][1])
 
         else:
-            #more please send help
+            #if there is no heirachy of blocking
+            #helperList contains the distances between the dummies
             helperList = []
+            #for every dummy
             for i in range(len(blocking[dummyNo - 1])):
-                herlperVar = 100000
+                #this is an arbitarly large number so that min can be used
+                helperVar = 100000
+                #for every other dummy
                 for j in range(dummyNo):
                     if blocking[dummyNo - 1][i] != dummies[j]:
-                        herlperVar = min(herlperVar , (blocking[i][0] - dummies[i][0])**2 + (blocking[i][1] - dummies[i][1])**2)
-
-                helperList.append(herlperVar)
+                        #helperVar will always be the distance to the closest dummy
+                        helperVar = min(helperVar , (blocking[i][0] - dummies[i][0])**2 + (blocking[i][1] - dummies[i][1])**2)
+                helperList.append(helperVar)
             
-            herlperVar = 0
+            #this finds the most isolated dummy
+            helperVar = 0
             for i in range(len(blocking[dummyNo - 1])):
-                if helperList[i] > herlperVar:
-                    herlperVar = helperList[i]
+                if helperList[i] > helperVar:
+                    helperVar = helperList[i]
                     count = i
             
-            ret = blocking[dummyNo - 1][i]
-            if i > 0:
-                blocking[dummyNo - 2].append(blocking[dummyNo - 1][:i])
-            
-            if i < len(blocking[dummyNo - 1] - 1):
-                blocking[dummyNo - 2].append(blocking[dummyNo - 1][i+1:])
+            #erturn the most isolated dummy
+            ret = blocking[dummyNo - 1][count]
+            #adds all of the dummies but the returned one to the new list
+            if count > 0:
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][:count])
+            if count < len(blocking[dummyNo - 1] - 1):
+                blocking[dummyNo - 2].append(blocking[dummyNo - 1][count+1:])
 
         rec = []
-
+        #for every dummy apart from the returned one add them to the rec list
         for i in range(dummyNo - 1):
             for j in range(len(blocking[i])):
                 rec.append(blocking[i][j])
-
+        
+        #if the len(rec) is 0 then the algorithm is done
         if len(rec) == 0:
-            print(ret)
-            print("f")
             return [ret]
-
-        print(ret)
-
+            
+        #listify ret
         ret = [ret]
 
+        #append the rest of the dummies to the ret list, after sorting
         helperList =  sortDummies(rec)
-
         for i in range(len(helperList)):
             ret.append(helperList[i])
 
+        #return the sorted list
         return ret
-
-    #blocking 2 contains something blocking 2 dummies etc
-
-    #if 0 blocking 2 - fall through
-    #if 1 blocking 2 pick up 1
-    #if 2 blocking 2 pick up one that occurs latest in the path, go around other
-    #if 3 blocking 2 not possible because 3 dummies are right next to each other
-
-    #if 0 blocking 1 - fall through
-
-    #if 3 blocking 1 - sort by distance from wall
-    #if 2 blocking 1 - recurse
-    #if 1 blocking 1 - collect
-
-    #if blocking 0 sort and collect
-
-
-def animate(i):
-    dummies = [[[0,0,1] , 0] , [[0,0,1] , 1] , [[0,0,1] , 2]]
-    goals = [[[90,50,0] , 0] , [[50,90,0] , 1] , [[212,212,1] , 2]]
-    robot = [20,20,0]
-
-    plt.gcf().clear()
-
-    for i in range(3):
-        dummies[i][0][0] = random.randrange(1,240)
-        dummies[i][0][1] = random.randrange(240 - dummies[i][0][0],240)
-        dummies[i][0][-1] = 1
-        plt.plot(dummies[i][0][0],dummies[i][0][1], 'ro')
-
-    dummies.sort(key = lambda x: dummySortFunct(x))
-
-
-    for i in range(1):
-        path = [[robot[0]],[robot[1]]]
-        path = findPath(robot, dummies[i], path)
-        path = findPath(robot, goals[dummies[i][1]], path)
-        plt.plot(path[0] , path[1])
-
-    path = [[robot[0]],[robot[1]]]
-    path = findPath(robot, [[20,20,0] , 0], path)
-    plt.plot(path[0],path[1])
-
-    robot = [20,20,0]
-
-    path = [[robot[0]], [robot[1]]]
-
-    for i in range(1):
-        path = findPath(robot, dummies[i], path)
-        path = findPath(robot, goals[dummies[i][1]], path)
-        
-
-    path = findPath(robot , [[20,20,0], 0], path)
-
-    instructions = []
-
-    pathToInstructions(path, 1, instructions)
-
-    print(instructions)
-
-    plt.plot([15 , 225],[225,15])
-
-    plt.xlim(0,240)
-    plt.ylim(0,240)
-    plt.gca().set_aspect("equal", "box")
-
-
-
-# SDummies  = sortDummies([[230 , 150 , 1],[150,230 , 1],[150,150 , 1]])
-# I = generateInstructions([10,15,0] , 1 , SDummies[0], SDummies)
-# print(SDummies)
-# print(I)
-# step 1 sort dummies
-#sort dummies into buckets, in terms of how many dummies they block
-#sort bucket in terms of distance from walls
-#if collisions occur go round one with lowest y
