@@ -120,9 +120,9 @@ def avg_dummy_positions(p):
 
     metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
 
-    dummy1 = [sum(metaDummies[0][0]) / len(metaDummies[0][0]) , sum(metaDummies[0][1]) / len(metaDummies[0][1])]
-    dummy2 = [sum(metaDummies[1][0]) / len(metaDummies[1][0]) , sum(metaDummies[1][1]) / len(metaDummies[1][1])]
-    dummy3 = [sum(metaDummies[2][0]) / len(metaDummies[2][0]) , sum(metaDummies[2][1]) / len(metaDummies[2][1])]
+    dummy1 = [sum(metaDummies[0][0]) / len(metaDummies[0][0]) , sum(metaDummies[0][1]) / len(metaDummies[0][1]), 1]
+    dummy2 = [sum(metaDummies[1][0]) / len(metaDummies[1][0]) , sum(metaDummies[1][1]) / len(metaDummies[1][1]), 1]
+    dummy3 = [sum(metaDummies[2][0]) / len(metaDummies[2][0]) , sum(metaDummies[2][1]) / len(metaDummies[2][1]), 1 ]
     
     return dummy1, dummy2, dummy3
 
@@ -132,11 +132,12 @@ def run():
     while True:
         robot = [10, 15, 0]
         direction = 1
-    #     # p = start_video(findDummies)
-    #     # dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-    #     # dummies = [dummy1, dummy2, dummy3]
+        p = start_video(findDummies)
+        dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+        dummies = [dummy1, dummy2, dummy3]
+        dummies = [dummies[0]]
 
-        dummies = [[220,220,1]]
+       
         instructString = ""
         count = len(dummies)
 

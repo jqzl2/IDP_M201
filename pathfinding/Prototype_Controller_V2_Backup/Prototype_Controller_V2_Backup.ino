@@ -26,8 +26,8 @@
 #define X3 X1
 #define X4 X2
 
-//#define RTurn 862
-#define RTurn 862
+//#define RTurn 825
+#define RTurn 1000
 
 #define IRPinS A3
 #define IRPinF A2
@@ -513,10 +513,8 @@ void maintainDistance(int deltaTime, int sideGoal) {
   dt = deltaTime;
   int start = millis();
 
-  while (millis() - start < deltaTime
-  
-  
-  ) {
+  while (millis() - start < deltaTime) {
+    drive(255,255);
     adjustDrive(sideGoal, 1);
   }
 
@@ -587,6 +585,7 @@ void turnOnSpot(int n) {
 
   //make sure wheels always end neutral
   drive(0, 0);
+  delay(500);
 }
 
 void openDoor() {
@@ -791,6 +790,7 @@ void loop() {
       case 4:
         enterGoal(0, 0);
         //return to start needs tsome more logic made
+        break;
 
        case 5:
          drive(255,255);

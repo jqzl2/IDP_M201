@@ -9,7 +9,7 @@ CollectDummyNum = 2
 DepositDummyNum = 3
 ReturnToStartNum = 4
 DummyAvoidanceNum = 5
-MaintainDistNum = 6
+MaintainDistNum = 5
 
 robotWidth = 15
 
@@ -25,10 +25,18 @@ def goToPoint(robot , goal, path):
     go to point directly by turning 90 degree 
     match y then match x
     '''
+    xError = 10
+    yError = 20
     # if y value doesn't match, repeat until match
     if robot[1] != goal[1]:
+        if robot[1] > goal[1]:
+            sign = -1
+        else:
+            sign = 1
         robot[1] = goal[1]
         path[0].append(robot[0])
+        path[1].append(robot[1] + (sign * 20))
+        path[0].append(robot[0] + (sign * 10))
         path[1].append(robot[1])
         return goToPoint(robot , goal , path)
 
@@ -56,11 +64,11 @@ def findPath(robot , goal, path):
     # if robot and goal not on same side
     if robot[2] != goal[2]:
         if robot[2] == 0:
-            transitionPoint = [235,15,1]
+            transitionPoint = [238,15,1]
             xError = -20
             yError = 20
         else:
-            transitionPoint = [15,225,0]
+            transitionPoint = [13,225,0]
             xError = 20
             yError = -20
         path = goToPoint(robot, transitionPoint, path)
@@ -71,7 +79,7 @@ def findPath(robot , goal, path):
         return findPath(robot , goal, path)
 
     if goal[2] == 1 and goal[0] > 240 - (2*robotWidth):
-        path = goToPoint(robot , [goal[0] , 40, 1] , path)
+        path = goToPoint(robot , [goal[0] , 80, 1] , path)
 
     path = goToPoint(robot, goal, path)
 
@@ -96,7 +104,7 @@ def pathToInstructions(path, direction, instructions, dummies):
     #change in x
     if path[0][1] != path[0][0]:
         if path[1][0] != path[1][1]:
-            instruct = pathToInstructions([path[0][1:],path[1][1:]], goalDirect, instructions, dummies) , direction
+            instruct = pathToInstructions([path[0][1:],path[1][1:]], direction, instructions, dummies) , direction
 
             if len(instruct) == 2:
                 instruct = instruct[0]
@@ -125,6 +133,7 @@ def pathToInstructions(path, direction, instructions, dummies):
     toPrint = "go to " + str(front) + " from the front and " + str(side) + " from the side"
      
     diff = (goalDirect - direction) % 4
+    print(goalDirect,direction)
     if diff == 3:
         diff = -1
     
@@ -163,12 +172,12 @@ def pathToInstructions(path, direction, instructions, dummies):
                     travelDist = abs(path[delta][0] - dummy[delta]) - 5
                     instructions.append(str(DummyAvoidanceNum) + "," + str(travelDist).zfill(3) + "," + str(side).zfill(3))
                     goAround(instructions)
-    if front > 150 or side > 60:
+    if front > 100 or side > 60:
         if side > 60:
             instructions.append(str(DummyAvoidanceNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
         else:
             instructions.append(str(MaintainDistNum) + "," + str(x1 - x0).zfill(3) + "," + str(side).zfill(3))
-    else:
+    elif front < 150 and side < 60:
         instructions.append(str(GoToNum) + "," + str(front).zfill(3) + "," + str(side).zfill(3))
 
     #print(toPrint)
