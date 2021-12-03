@@ -1,3 +1,4 @@
+//including relavent libaries
 #include <Adafruit_MotorShield.h>
 
 #include "SharpIR.h"
@@ -12,62 +13,65 @@
 
 #include <string.h>
 
+//these are contsants used for the driving
 #define MaxPower 255
 #define USOffset 5
 #define IROffset 1
 #define feedBackFactor 1
 
+//these are constants used to make the wall distance function easier to read
 #define X1 0.0
 #define Y1 0.0
-
 #define X2 - 10.0
 #define Y2 0.0
-
 #define X3 X1
 #define X4 X2
 
-//#define RTurn 825
+//define the time to turn 90 degrees
 #define RTurn 1000
 
+//defing the numbers of the pins for the sensors etc
+//IR Distance sensor pins, analog
 #define IRPinS A3
 #define IRPinF A2
 
+//QSD IR transistor pins, analog
 #define qsdPin1 A0
 #define qsdPin2 A1
 
+//LED indicator pins, digital
 #define redPin 2
 #define greenPin 3
-
-#define echoPinFront 13 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPinFront 12 //attach pin D3 Arduino to pin Trig of HC-SR04
-
-#define tsopPin 5
 #define motorPin 4
-#define lineSensorPin 7
 
+//UltraSinic echo and trig pins, digital
+#define echoPinFront 13
+#define trigPinFront 12
 #define echoPinSide 8
 #define trigPinSide 11
 
-const char* ssid = "M201"; // your network SSID (name)
-const char* password = "WacManIDP"; // your network password (use for WPA, or use as key for WEP)
+//pin for the IR sensing TSOP, digital
+#define tsopPin 5
 
+//pin for the lin sensor return, digital
+#define lineSensorPin 7
+
+//wifi magic values for connecting to laptops
+const char * ssid = "M201";
+const char * password = "WacManIDP";
 const uint16_t port = 8090;
-//const char * host = "0.0.0.0";
 IPAddress gateway;
-
-//pins 8 is free
-//analog 4 is free
 
 //global variable deffinition
 long duration; // variable for the duration of sound wave travel
 bool carrying = false; //is the robot carrying a dummy
-bool collecting = false;
+bool collecting = false; //is the robot collecting a dummy
 
-int tsop = 0; // variable to store the value read
+int tsop = 0; // variables to store values read, these are global to reduce the time spent in memory allocation during dummy differentation
 int qsd1 = 0;
 int qsd2 = 0;
 
-int USDistance; //variabled for the distance measurementd
+int USDistance;
 int IRDistance;
 
 // Create the motor shield object with the default I2C address
@@ -105,11 +109,10 @@ void setup() {
     digitalWrite(redPin, HIGH);
     while (1);
   }
-
   digitalWrite(redPin, LOW);
   Serial.println("Motor Shield found.");
 
-  // Set the speed to start, from 0 (off) to 255 (max speed)
+  // ensure that the motors start off neutral
   ML -> run(RELEASE);
   MR -> run(RELEASE);
 
@@ -117,73 +120,76 @@ void setup() {
   leftServo.attach(9);
   rightServo.attach(10);
 
+  //opening the door at the start
   openDoor();
 
+  //start the wifi connection
   WiFi.begin(ssid, password);
+  //while the connection is not yet working
   while (WiFi.status() != WL_CONNECTED) {
+    //wait to try again
     delay(500);
     Serial.println("...");
   }
 
+  //once the WiFi is connected set up the gateway and indiactor LED
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
   gateway = WiFi.gatewayIP();
   digitalWrite(greenPin, HIGH);
 }
 
-WiFiClient set_up_server() {    // connect Arduino to Sockets server created on the PC (improvement: make client a global variable by declaring before void setup() i.e. outside of any function)
+// connect Arduino to Sockets server created on the PC
+WiFiClient set_up_server() {
   WiFiClient client;
+  //repeat this code untill a connection is succesful
   while (true) {
+    //debugging prints
     if (!client.connect(gateway, port)) {
       Serial.println("Connection to host failed");
-    }
-
-    else {
+    } else {
       Serial.println("Connected to server successful!");
+      //return the connected server
       return client;
     }
   }
 }
 
-String send_mode_receive_path(WiFiClient client, int mode) {     // send dummy mode to server, and then receive the PC's next commands
+// send dummy mode to server, and then receive the PC's next commands
+String send_mode_receive_path(WiFiClient client, int mode) {
   String commands = "";
   client.print(mode);
-  while (true) { // if there are bytes to read from the client
+  // if there are bytes to read from the client
+  while (true) {
     if (client.available()) {
-
-      char c = client.read();   // read a byte
-      //client.print(c);          // then print it out the serial monitor
+      // read a byte
+      char c = client.read();
+      //add it to the return string
       commands += c;
+      //if its the terminating char then return
       if (c == '$') {
-        return commands;                  // end of command signposted by '$', so stop trying to read incoming data from PC
+        return commands;
       }
     }
-
-    //command = "";    // clear command line
-    //client.stop();
-    //delay(10000);
   }
   return commands;
 }
 
+//find the dummy mode using sensors
 int dummyMode() {
+  //read the QSD's
   qsd1 = analogRead(qsdPin1);
   qsd2 = analogRead(qsdPin2);
 
   int Mode = 0;
-  ///*
   // dummy signal detected (1 = 0.049mV)
   if (qsd1 > 200 || qsd2 > 200) {
     // 38kHz detected (1st cycle)
     tsop = digitalRead(tsopPin);
-    //cycle_a = micros();     //time begins
-
     if (tsop == 0) {
-
       // 38kHz detected (2nd cycle)
       delay(6); //wait for 6ms to take cycle2 reading
       tsop = digitalRead(tsopPin);
-
       if (tsop == 0) {
         // Mode = 1
         Mode = 1;
@@ -265,7 +271,6 @@ int DiffDummy() {
     }
 
   }
-
   // adjust the threshold value to change accuracy
   if (mode_sum > 50) {
     return 3;
@@ -297,7 +302,7 @@ void drive(int l, int r) {
   MR -> setSpeed(abs(r));
 
   //start/stop blinking LED
-  if ((l != 0) or (r != 0)) {
+  if ((l != 0) or(r != 0)) {
     digitalWrite(motorPin, HIGH);
   } else {
     digitalWrite(motorPin, LOW);
@@ -324,21 +329,20 @@ int readUltraSonic(int pulse, int returnPin) {
 //returns the distance from the front of the vehical
 int distanceFront() {
 
+  //reads the relevent 2 sensors
   int fDist = frontIR.distance();
   int uDist = readUltraSonic(trigPinFront, echoPinFront);
 
   //if the robot is moving a dummy or
   //if the robot is at the limits of the US sensor, and is not collecting
-  if (carrying or (uDist > 70 and !collecting)) {
+  if (carrying or(uDist > 70 and!collecting)) {
     //just use the IR sensor
     return fDist - IROffset;
   }
 
   //just use the US sensor
-  return  uDist - USOffset;
+  return uDist - USOffset;
 }
-
-
 
 //returns the distance from the side of the vehical
 int distanceSide() {
@@ -347,59 +351,34 @@ int distanceSide() {
   USDistance = readUltraSonic(trigPinSide, echoPinSide);
 
   //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
+  //find the projected Y values, projected X values are the same as their parents
   float Y3 = Y1 - USDistance;
   float Y4 = Y2 - IRDistance;
 
+  //P = -progected point from 1
   float P1 = -1 * X3;
   float P2 = -1 * Y3;
 
+  //C = the difference between the 2 projected points 
   float C1 = X4 - X3;
   float C2 = Y4 - Y3;
 
+  //t is equall to the % of C the closest point is between the 2 projected points
   float t = (P1 * C1) + (P2 * C2);
   t /= (C1 * C1) + (C2 * C2);
 
+  //point 5 is the closest point on the line
   float X5 = X3 + (C1 * t);
   float Y5 = Y3 + (C2 * t);
 
+  //returns the magnitude of point 5
   return pow((X5 * X5) + (Y5 * Y5), 0.5) + 10;
 }
 
-//this returns the angle between the robot and the wall, used for turning
-float angleSide() {
-  //get the two distances
-  IRDistance = sideIR.distance();
-  USDistance = readUltraSonic(trigPinSide, echoPinSide);
-
-  //this is all vectors, see https://www.desmos.com/calculator/k5fv7n715q for details
-  float Y3 = Y1 - USDistance;
-  float Y4 = Y2 - IRDistance;
-
-  float P1 = -1 * X3;
-  float P2 = -1 * Y3;
-
-  float C1 = X4 - X3;
-  float C2 = Y4 - Y3;
-
-  float t = (P1 * C1) + (P2 * C2);
-  t /= (C1 * C1) + (C2 * C2);
-
-  float X5 = X3 + (C1 * t);
-  float Y5 = Y3 + (C2 * t);
-
-  if (X5 < 0) {
-    return 1.0;
-  }
-
-  return -1.0;
-
-  return atan(X5 / Y5);
-}
-
-//24 base
-//50 blue
-//90 red
-//24 white
+//24 , 24 base
+//50 , 90 blue
+//90 , 50 red
+//24 , 24 white
 
 //this code is identical to the goToDistance but uses the line sensor or time to terminate
 //it is its own function in order to optimise for speed
@@ -410,34 +389,40 @@ void enterGoal(int mode, int sideGoal) {
   float mult;
   float dt;
 
+  //dt is the distance moved in 1 second
   dt = 10 * 3.14 * 40 / 60;
 
+  //which type of goal is it
   switch (mode) {
-    case 0:
-    case 1:
-      dt *= 24;
-      sideGoal = 24;
-      break;
+  case 0:
+  case 1:
+    //move the correct distance into the goal from the correct distance away
+    dt *= 24;
+    sideGoal = 24;
+    break;
 
-    case 2:
-      dt *= 50;
-      sideGoal = 90;
-      break;
+  case 2:
+    dt *= 50;
+    sideGoal = 90;
+    break;
 
-    case 3:
-      dt *= 90;
-      sideGoal = 50;
-      break;
+  case 3:
+    dt *= 90;
+    sideGoal = 50;
+    break;
   }
 
+  //convert dt into milliseconds
   dt *= 1000;
   int start = millis();
 
+  //until dt milliseconds has passed, or a line has been found
   while (millis() - start < dt and digitalRead(lineSensorPin) == 0) {
-
+    //maintain the correct distance
     adjustDrive(sideGoal, 1);
   }
 
+  //hard-coded dummy deposit sequence
   drive(255, 255);
   delay(1000);
   openDoor();
@@ -450,29 +435,33 @@ void enterGoal(int mode, int sideGoal) {
 
 // this is a wrapper to deal with the carrying logic
 // the robot does each goTo multiple times to account for bad sensor reads
-void goToDistanceWrapper (int goal, int sideGoal) {
+void goToDistanceWrapper(int goal, int sideGoal) {
+  //if the robot is carrying a dummy
   if (carrying) {
+    //this is called multiple times to account for the IR innacuracy
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
     goToDistance(goal + 30, sideGoal);
+    //as the IR cant see under 30 cm the robot stops 30 cm from its goal then drives 30 cm
     maintainDistance(2000, sideGoal);
     drive(0, 0);
 
   } else {
+    //this is called multiple times to account for the US innacuracy
     goToDistance(goal, sideGoal);
     goToDistance(goal, sideGoal);
     goToDistance(goal, sideGoal);
   }
 
-  delay(100);
-
+  //if there has been a consistent error try again
   if (abs(distanceFront() - goal) / goal > 0.05 and carrying == false) {
     goToDistanceWrapper(goal, sideGoal);
   }
 }
+
 //general movement code
 void goToDistance(int goal, int sideGoal) {
 
@@ -514,7 +503,7 @@ void maintainDistance(int deltaTime, int sideGoal) {
   int start = millis();
 
   while (millis() - start < deltaTime) {
-    drive(255,255);
+    drive(255, 255);
     adjustDrive(sideGoal, 1);
   }
 
@@ -553,6 +542,7 @@ void adjustDrive(int sideGoal, int sign) {
 
 //this turns corners in a fixed radius, used for going around the obsticals
 void turnCorner(int sign) {
+  //turn clockwise or anticlockwise
   if (sign > 0) {
     drive(255, 75);
   } else {
@@ -577,95 +567,42 @@ void turnOnSpot(int n) {
   //rturn is calcualted assuming max speed at all times
   delay((int)(abs(n) * RTurn));
 
-  //this is used to ensure that the robot is close to straight
-  //not neccessary but makes robot run faster in the end
-  //while (angleSide() < 0) {
-    //delay(1);
-  //}
-
   //make sure wheels always end neutral
   drive(0, 0);
   delay(500);
 }
 
+//opens the doors and sets carrying
 void openDoor() {
   leftServo.write(30);
   rightServo.write(120);
   carrying = false;
 }
 
+//closes the doors and sets carrying
 void closeDoor() {
   leftServo.write(90);
   rightServo.write(60);
   carrying = true;
 }
 
-
-
+//used to blindly drive forwards
 int blindDrive(int dist, int sign) {
+  //start driving
   drive(255 * sign, 255 * sign);
+
+  //wait for the correct time to elapse
+  //this assumes that the robot is moving at 20cm/s
   int start = millis();
   while ((millis() - start) < dist * 50) {
     delay(1);
   }
-  return millis() - start;
+
+  //stop driving
   drive(0, 0);
+  return millis() - start;
+
 }
-
-void goToGoal(int mode) {
-  turnOnSpot(-1);
-  int sign = 1;
-  if (distanceFront() < 5) {
-    sign = -1;
-  }
-
-  blindDrive(5, sign);
-  turnOnSpot(1);
-
-  //should now be aligned with back right wall
-
-  if (mode == 1) {
-    maintainDistance(1000, 15);
-    drive(255, 255);
-    delay(1000);
-    drive(0, 0);
-
-    turnOnSpot(2);
-
-    openDoor();
-
-    drive(-255, -255);
-
-    delay(1000);
-
-    turnOnSpot(-2);
-
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-  } else {
-    goToDistanceWrapper(5, 15);
-    turnOnSpot(1);
-
-    goToDistanceWrapper(70, 5);
-
-    if (mode == 2) {
-      goToDistanceWrapper(30, 5);
-    }
-
-    turnOnSpot(1);
-
-    enterGoal(mode , 1);
-
-    drive(-255, -255);
-    delay(1000);
-
-    turnOnSpot(-1);
-  }
-
-  goToDistanceWrapper(5, 15);
-  turnOnSpot(1);
-}
-
 
 //dummy collection logic
 int collectDummy(int dummySide) {
@@ -709,122 +646,128 @@ int collectDummy(int dummySide) {
   //back to default mode handling
   collecting = false;
 
-  //goToGoal(dumm yMode);
-
   //return mode
   return dummyMode;
 }
 
+//runtime loop
 void loop() {
+  //set up the wifi
   WiFiClient client = set_up_server();
   int mode = 0;
-  while(true){
-  String commands;
-  String request = send_mode_receive_path(client, mode);
-  digitalWrite(redPin, HIGH);
-  char * crequest = new char[request.length() + 1];
-  strcpy(crequest, request.c_str());
-  char * data = strtok(crequest, "!");
+  //once wifi is set up repeat forever
+  while (true) {
+    //get the commands
+    String commands;
+    String request = send_mode_receive_path(client, mode);
 
-  int i = 0;
-  while (data != 0 && i < 4) {
-    i += 1;
-    //Serial.println(data);
-    data = strtok(NULL, "!");
-    if (i == 1) {
-      commands = data;
-      break;
+    //human debugging LED
+    digitalWrite(redPin, HIGH);
+
+    //seperate the input by the !'s giving a valid instruction string
+    char * crequest = new char[request.length() + 1];
+    strcpy(crequest, request.c_str());
+    char * data = strtok(crequest, "!");
+
+    int i = 0;
+    //the instruction string is the second piece of data
+    while (data != 0 && i < 4) {
+      i += 1;
+      data = strtok(NULL, "!");
+      if (i == 1) {
+        commands = data;
+        break;
+      }
     }
-  }
-  delete[] crequest;
-  Serial.println(commands);
+    //memory cleanup
+    delete[] crequest;
 
-  int count = 0;
-  char * ccommands = new char[commands.length() + 1];
-  //strcpy(ccommands, commands.c_str());
+    int count = 0;
+    char * ccommands = new char[commands.length() + 1];
+    //strcpy(ccommands, commands.c_str());
 
-  commands.toCharArray(ccommands, commands.length());
+    //start to seperate the command string into individual commands
+    commands.toCharArray(ccommands, commands.length());
+    char * command = strtok(ccommands, ".");
 
-  char * command = strtok(ccommands, ".");
+    count = 0;
 
-  count = 0;
+    //while there is some new command
+    while (command != 0) {
+      //add to the number of commands executed
+      count += 1;
 
-  while (command != 0) {
-    count += 1;
+      //get the next instruction
+      String parsingArray = strtok(command, ",");
 
-    String parsingArray = strtok(command, ",");
+      //get the 3 components of it
+      int operation = parsingArray.toInt(); // mode, always used
+      parsingArray = strtok(0, ",");
 
-    int operation = parsingArray.toInt(); // turn/goto/dummymode
-    parsingArray = strtok(0, ",");
+      int input1 = parsingArray.toInt(); // first set of data, always used
 
-    int input1 = parsingArray.toInt(); //
+      parsingArray = strtok(0, ",");
+      int input2 = parsingArray.toInt(); // second set, often not used
 
-    parsingArray = strtok(0, ",");
-    int input2 = parsingArray.toInt(); //
-
-    switch (operation) {
+      //dealing with the operators
+      switch (operation) {
+      //go to distance from wall with normal wall following
       case 0:
         goToDistanceWrapper(input1, input2);
-        //go to
         break;
 
+      //turn input1 * 90degrees clockwise
       case 1:
         turnOnSpot(input1 * -1);
-        //turn on spot
         break;
 
+      //collect the dummy and get the mode ready for return
       case 2:
-
         goToDistance(0, input1);
-
-        mode =   collectDummy(input1);
-
-        //collect dummy
+        mode = collectDummy(input1);
         break;
 
+      //deposit the dummy in its goal
       case 3:
         enterGoal(input1, input2);
-        //deposit dummy
         break;
 
+      //enter the start goal
       case 4:
         enterGoal(0, 0);
-        //return to start needs tsome more logic made
         break;
 
-       case 5:
-         drive(255,255);
-         delay(input1 * 50);
-         drive(0,0);
-         break;
+      //blindly drive forward, worst case pathing scenario
+      case 5:
+        drive(255, 255);
+        delay(input1 * 50);
+        drive(0, 0);
+        break;
 
-       case 6:
-         maintainDistance(input1 * 50 , input2);
-         break;
+      //go input1 cm forward while following the wall
+      case 6:
+        maintainDistance(input1 * 50, input2);
+        break;
 
-       case 7:
-          openDoor();
-          delay(5000);
-          closeDoor();
-          delay(5000);
-          break;
-    }
+      //debugging case
+      case 7:
+        openDoor();
+        delay(5000);
+        closeDoor();
+        delay(5000);
+        break;
+      }
 
-    Serial.println(operation);
-    Serial.println(input1);
-    Serial.println(input2);
+      //reset the char array to parse the next instruction, done due to how strtok works
+      commands.toCharArray(ccommands, commands.length());
+      command = strtok(ccommands, ".");
 
-    commands.toCharArray(ccommands, commands.length());
-
-    command = strtok(ccommands, ".");
-
-    i = 0;
-
-    while (i < count) {
-      command = strtok(0, ".");
-      i++;
+      i = 0;
+      //read the next instruction untill the next command will be the next one to be executed
+      while (i < count) {
+        command = strtok(0, ".");
+        i++;
+      }
     }
   }
-  }
-  digitalWrite(redPin, LOW);
 }

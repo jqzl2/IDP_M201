@@ -1,199 +1,85 @@
+#importing required libaries
 import keyboard
 from camera.video_capture import findDummies, start_video
 from pathfinding.pathfinding import findPath, generateInstructions, sortDummies
-import numpy as np
-import math
+from dummy_differentiation.dummy_stats import avg_dummy_positions
 from wifi.server import set_up_server, receive_dummy_mode, send_commands
 
-
-# -*- coding: utf-8 -*-
-
-# A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise
-# Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu
-# dbscan: density based spatial clustering of applications with noise
-
-UNCLASSIFIED = False
-NOISE = None
-
-def _dist(p,q):
-	return math.sqrt(np.power(p-q,2).sum())
-
-def _eps_neighborhood(p,q,eps):
-	return _dist(p,q) < eps
-
-def _region_query(m, point_id, eps):
-    n_points = m.shape[1]
-    seeds = []
-    for i in range(0, n_points):
-        if _eps_neighborhood(m[:,point_id], m[:,i], eps):
-            seeds.append(i)
-    return seeds
-
-def _expand_cluster(m, classifications, point_id, cluster_id, eps, min_points):
-    seeds = _region_query(m, point_id, eps)
-    if len(seeds) < min_points:
-        classifications[point_id] = NOISE
-        return False
-    else:
-        classifications[point_id] = cluster_id
-        for seed_id in seeds:
-            classifications[seed_id] = cluster_id
-            
-        while len(seeds) > 0:
-            current_point = seeds[0]
-            results = _region_query(m, current_point, eps)
-            if len(results) >= min_points:
-                for i in range(0, len(results)):
-                    result_point = results[i]
-                    if classifications[result_point] == UNCLASSIFIED or \
-                       classifications[result_point] == NOISE:
-                        if classifications[result_point] == UNCLASSIFIED:
-                            seeds.append(result_point)
-                        classifications[result_point] = cluster_id
-            seeds = seeds[1:]
-        return True
-        
-def dbscan(m, eps, min_points):
-    """Implementation of Density Based Spatial Clustering of Applications with Noise
-    See https://en.wikipedia.org/wiki/DBSCAN
-    
-    scikit-learn probably has a better implementation
-    
-    Uses Euclidean Distance as the measure
-    
-    Inputs:
-    m - A matrix whose columns are feature vectors
-    eps - Maximum distance two points can be to be regionally related
-    min_points - The minimum number of points to make a cluster
-    
-    Outputs:
-    An array with either a cluster id number or dbscan.NOISE (None) for each
-    column vector in m.
-    """
-    cluster_id = 1
-    n_points = m.shape[1]
-    classifications = [UNCLASSIFIED] * n_points
-    for point_id in range(0, n_points):
-        point = m[:,point_id]
-        if classifications[point_id] == UNCLASSIFIED:
-            if _expand_cluster(m, classifications, point_id, cluster_id, eps, min_points):
-                cluster_id = cluster_id + 1
-    return classifications
-
-def avg_dummy_positions(p):
-
-    dummy_xs = []
-    dummy_ys = []
-
-    for frame in p:
-        # dummy1 = frame[0]
-        # dummy2 = frame[1]
-
-        # dummy_xs.append(dummy1[0])
-        # dummy_ys.append(dummy1[1])
-        # dummy_xs.append(dummy2[0])
-        # dummy_ys.append(dummy2[1])
-
-        for i in range(len(frame)):
-            dummy_xs.append(frame[i][0])
-            dummy_ys.append(frame[i][1])
-        
-        # if len(frame) == 3:
-        #     dummy3 = frame[2]
-        #     dummy_xs.append(dummy3[0])
-        #     dummy_ys.append(dummy3[1])
-
-    m = np.matrix([dummy_xs , dummy_ys])
-    print(m)
-    print("")
-    clusterIds = dbscan(m, 15, 0)
-
-    metaDummies = []
-
-    for i in range(len(dummy_xs)):
-        if clusterIds[i] != None:
-            while len(metaDummies) < clusterIds[i]:
-                metaDummies.append([[],[]])
-
-            metaDummies[clusterIds[i]-1][0].append(240 - (dummy_xs[i] * (240 / (((201 - 878)**2 + (735 - 705)**2)**0.5))))
-            metaDummies[clusterIds[i]-1][1].append(dummy_ys[i] * (240 / (((201 - 178)**2 + (735 - 76)**2)**0.5)))
-
-    metaDummies.sort(key = lambda x: len(x[0]), reverse=True)
-
-    dummy1 = [sum(metaDummies[0][0]) / len(metaDummies[0][0]) , sum(metaDummies[0][1]) / len(metaDummies[0][1]), 1]
-    dummy2 = [sum(metaDummies[1][0]) / len(metaDummies[1][0]) , sum(metaDummies[1][1]) / len(metaDummies[1][1]), 1]
-    dummy3 = [sum(metaDummies[2][0]) / len(metaDummies[2][0]) , sum(metaDummies[2][1]) / len(metaDummies[2][1]), 1 ]
-    
-    return dummy1, dummy2, dummy3
-
+#main robot controll code
 def run():
+    #setting up the connection with the arduino
     conn = set_up_server()
+    #setting up the intial robot data
+    robot = [20, 10, 0]
+    direction = 1
 
-    while True:
-        robot = [10, 15, 0]
-        direction = 1
-        p = start_video(findDummies)
-        dummy1, dummy2, dummy3 = avg_dummy_positions(p)
-        dummies = [dummy1, dummy2, dummy3]
-        dummies = [dummies[0]]
+    #get the dummies from 50 frames of video
+    p = start_video(findDummies)
 
-       
-        instructString = ""
-        count = len(dummies)
+    #find the dummies given those frames
+    dummy1, dummy2, dummy3 = avg_dummy_positions(p)
+    dummies = [dummy1, dummy2, dummy3]
 
-        for i in range(count):
-            instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
-            #instructions, robot, direction = generateInstructions(robot, direction, 2, dummies[i:])
-            for struct in instructions:
-                instructString+=struct + "."
+    #sort the dummies into their collection order
+    dummies = sortDummies(dummies)
+    instructString = ""
+    count = len(dummies)
 
-            instructString = "hi!" + instructString + "!$"
-            if instructString:
-                send_commands(instructString, conn)
-                mode = receive_dummy_mode(conn)
-                return
-
-            for struct in instructions:
-                instructString+=struct + "."
-        
+    #for the dummies in the first pass
+    for i in range(count):
+        #get the instructions to collect that dummy
+        #dummies[i:] is used to make the robot not avoid dummies that its put in goals
+        instructions, robot, direction = generateInstructions(robot, direction, dummies[i], dummies[i:])
+        #converts the instructions into a correct format string
+        for struct in instructions:
+            instructString+=struct + "."
         instructString = "hi!" + instructString + "!$"
-        
-        # while True:
-        #     if keyboard.is_pressed('s'):
-        #         command = input("Insert command: ")
-        #         command = str(command)
-        #         instructString = "hi!" + command + "!$" 
-        #         mode = receive_dummy_mode(conn)
-        #         send_commands(instructString, conn)
 
-        # if mode != 1:
-        #     instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
-        #     for struct in instructions:
-        #         instructString+=struct + "."
-        # else:
-        #     dummies.append(dummies[i])
+        #send the instructions to the robot and wait for the dummy mode to be returned
+        send_commands(instructString, conn)
+        mode = receive_dummy_mode(conn)
 
-        # if len(dummies) != count:
-        #     instructions, robot, direction = generateInstructions(robot, direction, dummies[count], [])
-        #     for struct in instructions:
-        #         instructString+=struct + "."
+        #if its mode 1 the dummy will be collected last so leave it there
+        if mode != 1:
+            #otherwise get the instructions to deliver the dummy
+            instructions, robot, direction = generateInstructions(robot , direction , mode , dummies[i:])
+            #converts intstructions into a correct format string
+            for struct in instructions:
+                instructString+=struct + "."
+        else:
+            #add the dummy to be colected in the second pass
+            dummies.append(dummies[i])
 
-        #     mode = receive_dummy_mode(conn)
-        #     send_commands(instructString, conn)
+    #if the mode 1 dummy was found
+    if len(dummies) != count:
+        #get the instructions to collect that dummy
+        instructions, robot, direction = generateInstructions(robot, direction, dummies[count], [])
+        #converts the instructions into a correct format string
+        for struct in instructions:
+            instructString+=struct + "."
+        instructString = "hi!" + instructString + "!$"
 
-        #     instructString = ""
+        #send the instructions to the robot and wait for the dummy mode to be returned
+        send_commands(instructString, conn)
+        mode = receive_dummy_mode(conn)
 
-        #     instructions, robot, direction = generateInstructions(robot , direction , 1 , [])
-        #     for struct in instructions:
-        #         instructString+=struct + "."
+        #get the instructions to deliver the dummy
+        instructString = ""
+        instructions, robot, direction = generateInstructions(robot , direction , 1 , [])
+         #converts intstructions into a correct format string
+        for struct in instructions:
+            instructString+=struct + "."
 
-        # instructions, robot, direction = generateInstructions(robot , direction , 0 , [])
-        # for struct in instructions:
-        #     instructString+=struct + "."
-
-        #     #mode = receive_dummy_mode(conn)
-        #     send_commands(instructString, conn)
-
+    #get the instructions to return home
+    instructions, robot, direction = generateInstructions(robot , direction , 0 , [])
+    #converts intstructions into a correct format string
+    for struct in instructions:
+        instructString+=struct + "."
+    instructString = "hi!" + instructString + "!$"
+    #send the final instructions and stop the python program
+    send_commands(instructString, conn)
+    
+#run the controll code
 if __name__ == "__main__":
     print("*** WacMan Program ***")
     run()
