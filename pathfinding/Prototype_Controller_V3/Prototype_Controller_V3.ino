@@ -132,7 +132,7 @@ void setup() {
     Serial.println("...");
   }
 
-  //once the WiFi is connected set up the gateway and indiactor LED
+  //once the WiFi is connected set up the gateway and indicator LED
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
   gateway = WiFi.gatewayIP();
@@ -523,7 +523,7 @@ void adjustDrive(int sideGoal, int sign) {
   //feedback factors for fine tuning if required
   mult *= feedBackFactor;
 
-  //if its too far out or too close
+  //if it's too far out or too close
   if (mult < 0) {
     rightSpeed = MaxPower * (1 + mult);
     leftSpeed = MaxPower;
