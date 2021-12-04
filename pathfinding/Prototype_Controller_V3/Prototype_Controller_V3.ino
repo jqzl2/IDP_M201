@@ -1,4 +1,4 @@
-//including relavent libaries
+//including relevant libraries
 #include <Adafruit_MotorShield.h>
 
 #include "SharpIR.h"
@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-//these are contsants used for the driving
+//these are constants used for the driving
 #define MaxPower 255
 #define USOffset 5
 #define IROffset 1
@@ -30,12 +30,12 @@
 //define the time to turn 90 degrees
 #define RTurn 1000
 
-//defing the numbers of the pins for the sensors etc
+//defining the numbers of the pins for the sensors etc
 //IR Distance sensor pins, analog
 #define IRPinS A3
 #define IRPinF A2
 
-//QSD IR transistor pins, analog
+//QSD IR transistor pins, analogue
 #define qsdPin1 A0
 #define qsdPin2 A1
 
@@ -44,7 +44,7 @@
 #define greenPin 3
 #define motorPin 4
 
-//UltraSinic echo and trig pins, digital
+//UltraSonic echo and trig pins, digital
 #define echoPinFront 13
 #define trigPinFront 12
 #define echoPinSide 8
@@ -62,7 +62,7 @@ const char * password = "WacManIDP";
 const uint16_t port = 8090;
 IPAddress gateway;
 
-//global variable deffinition
+//global variable declarations
 long duration; // variable for the duration of sound wave travel
 bool carrying = false; //is the robot carrying a dummy
 bool collecting = false; //is the robot collecting a dummy
